@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Mcpify.Language.Rust</AssemblyName>
+    <RootNamespace>Mcpify.Language.Rust</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="toolchain.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Mcpify.Core/Mcpify.Core.csproj" />
+  </ItemGroup>
+</Project>

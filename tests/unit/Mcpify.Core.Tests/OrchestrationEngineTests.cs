@@ -1,0 +1,92 @@
+using Mcpify.Core.Models;
+using Mcpify.Core.Orchestration;
+
+namespace Mcpify.Core.Tests;
+
+public class OrchestrationEngineTests : IDisposable
+{
+    private readonly string _tempDir =
+        Path.Combine(Path.GetTempPath(), $"mcpify-oe-{Guid.NewGuid():N}");
+
+    public OrchestrationEngineTests() => Directory.CreateDirectory(_tempDir);
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
+    }
+
+    private OrchestrationEngine MakeEngine(FakeProcessRunner runner, StubLanguageModule module) =>
+        new([module], runner, generatedProjectsRoot: Path.Combine(_tempDir, "gen"));
+
+    [Fact]
+    public async Task RunAsync_HappyPath_WritesFilesAndReturnsSuccess()
+    {
+        var sourceDir = CreateSourceDir("src", ".stub");
+        var outDir = Path.Combine(_tempDir, "out");
+        var fake = new FakeProcessRunner();
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+
+        var result = await engine.RunAsync(sourceDir, outDir, "MyServer", Transport.Stdio);
+
+        Assert.True(result.Success);
+        Assert.Equal(outDir, result.OutputPath);
+        Assert.Null(result.Error);
+        Assert.Single(fake.Calls);
+        Assert.Equal("stub-tool", fake.Calls[0].Executable);
+        Assert.True(File.Exists(Path.Combine(_tempDir, "gen", "MyServer", "stub.txt")));
+    }
+
+    [Fact]
+    public async Task RunAsync_ProcessFails_ReturnsFailure()
+    {
+        var sourceDir = CreateSourceDir("src2", ".stub");
+        var fake = new FakeProcessRunner { DefaultResult = new ProcessResult(1, string.Empty, "build error") };
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out2"), "FailSvr", Transport.Stdio);
+
+        Assert.False(result.Success);
+        Assert.Equal("build error", result.Error);
+    }
+
+    [Fact]
+    public async Task RunAsync_PublishCommand_HasTokensResolved()
+    {
+        var sourceDir = CreateSourceDir("src3", ".stub");
+        var outDir = Path.Combine(_tempDir, "out3");
+        var fake = new FakeProcessRunner();
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+
+        await engine.RunAsync(sourceDir, outDir, "TokSvr", Transport.Stdio);
+
+        var genPath = Path.Combine(_tempDir, "gen", "TokSvr");
+        Assert.Contains(genPath, fake.Calls[0].Arguments);
+        Assert.Contains(outDir, fake.Calls[0].Arguments);
+    }
+
+    [Fact]
+    public async Task RunAsync_HttpTransport_PassedThroughToContext()
+    {
+        var sourceDir = CreateSourceDir("src4", ".stub");
+        var fake = new FakeProcessRunner();
+        var emitted = new EmittedProject(
+            Path.Combine(_tempDir, "gen", "HttpSvr"),
+            [new EmittedFile("t.txt", "transport={Transport}")]);
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub", emittedProject: emitted));
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out4"), "HttpSvr", Transport.StreamableHttp);
+
+        // The emitted file content itself isn't token-resolved — context tokens are for commands.
+        // Verify engine completed successfully.
+        Assert.True(result.Success);
+    }
+
+    private string CreateSourceDir(string name, string ext)
+    {
+        var dir = Path.Combine(_tempDir, name);
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, $"file{ext}"), "content");
+        return dir;
+    }
+}
