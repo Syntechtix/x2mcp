@@ -1,0 +1,6 @@
+namespace Mcpify.Core.Models;
+
+public record ScannedSurface(
+    string SourcePath,
+    string Language,
+    IReadOnlyList<TypeDescriptor> Types);

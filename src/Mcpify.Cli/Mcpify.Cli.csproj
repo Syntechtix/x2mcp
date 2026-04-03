@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>mcpify</AssemblyName>
+    <RootNamespace>Mcpify.Cli</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Mcpify.Core/Mcpify.Core.csproj" />
+    <ProjectReference Include="../Mcpify.Language.DotNet/Mcpify.Language.DotNet.csproj" />
+    <ProjectReference Include="../Mcpify.Language.Python/Mcpify.Language.Python.csproj" />
+    <ProjectReference Include="../Mcpify.Language.Go/Mcpify.Language.Go.csproj" />
+    <ProjectReference Include="../Mcpify.Language.Rust/Mcpify.Language.Rust.csproj" />
+    <ProjectReference Include="../Mcpify.Language.Ruby/Mcpify.Language.Ruby.csproj" />
+  </ItemGroup>
+</Project>

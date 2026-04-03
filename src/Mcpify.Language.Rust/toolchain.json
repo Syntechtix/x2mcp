@@ -1,0 +1,7 @@
+{
+  "requiredExecutables": ["cargo"],
+  "buildCommand": "build --release --manifest-path {GeneratedProjectPath}/Cargo.toml",
+  "publishCommand": "build --release --manifest-path {GeneratedProjectPath}/Cargo.toml",
+  "supportedTransports": ["Stdio", "StreamableHttp"],
+  "sourceExtensions": [".rs"]
+}
