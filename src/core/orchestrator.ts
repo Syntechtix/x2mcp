@@ -67,9 +67,7 @@ export class Orchestrator {
 
     // 3. Collect source files
     const stat = fs.statSync(absInput);
-    const sourceFiles = stat.isDirectory()
-      ? collectSourceFiles(absInput, language)
-      : [absInput];
+    const sourceFiles = stat.isDirectory() ? collectSourceFiles(absInput, language) : [absInput];
 
     if (sourceFiles.length === 0) {
       throw new Error(`No ${language} source files found in "${absInput}".`);
@@ -118,7 +116,5 @@ export class Orchestrator {
 /** Infer a human-friendly module name from a file or directory path. */
 function inferModuleName(inputPath: string): string {
   const base = path.basename(inputPath, path.extname(inputPath));
-  return base === "index" || base === "main"
-    ? path.basename(path.dirname(inputPath))
-    : base;
+  return base === "index" || base === "main" ? path.basename(path.dirname(inputPath)) : base;
 }

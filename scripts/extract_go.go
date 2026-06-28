@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/ast"
-	"go/doc"
 	"go/parser"
 	"go/token"
 	"os"
@@ -74,22 +73,6 @@ func extractFunctions(sourceFile string) ([]ToolDef, error) {
 		return nil, fmt.Errorf("parse error: %w", err)
 	}
 
-	// Build doc package for comment lookup
-	pkg := &ast.Package{
-		Name:  f.Name.Name,
-		Files: map[string]*ast.File{sourceFile: f},
-	}
-	docPkg, err := doc.NewFromFiles(fset, pkg.Files, "")
-	if err != nil {
-		return nil, fmt.Errorf("doc error: %w", err)
-	}
-
-	// Index godoc comments by function name
-	docMap := make(map[string]string)
-	for _, fn := range docPkg.Funcs {
-		docMap[fn.Name] = strings.TrimSpace(fn.Doc)
-	}
-
 	var tools []ToolDef
 	for _, decl := range f.Decls {
 		fd, ok := decl.(*ast.FuncDecl)
@@ -101,7 +84,11 @@ func extractFunctions(sourceFile string) ([]ToolDef, error) {
 			continue
 		}
 
-		description := docMap[fd.Name.Name]
+		// Read the godoc comment directly from the AST node.
+		description := ""
+		if fd.Doc != nil {
+			description = strings.TrimSpace(fd.Doc.Text())
+		}
 		pos := fset.Position(fd.Pos())
 
 		var params []ParameterDef

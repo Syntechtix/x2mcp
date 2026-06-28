@@ -10,10 +10,7 @@ import type { MCPServerSpec, ToolDefinition } from "../../core/types.js";
  * - Uses the FastMCP / low-level MCP Python SDK pattern.
  * - Runs over stdio transport.
  */
-export async function generatePython(
-  spec: MCPServerSpec,
-  outputDir: string,
-): Promise<string> {
+export async function generatePython(spec: MCPServerSpec, outputDir: string): Promise<string> {
   const serverFile = path.join(outputDir, "server.py");
 
   // Relative import path from outputDir → spec.sourcePath
@@ -23,8 +20,6 @@ export async function generatePython(
 
   const toolNames = spec.tools.map((t) => t.name);
   const importLine = `from ${modulePath} import ${toolNames.join(", ")}`;
-
-  const toolRegistrations = spec.tools.map((t) => renderPythonTool(t)).join("\n\n");
 
   const serverCode = `#!/usr/bin/env python3
 """
@@ -87,9 +82,7 @@ if __name__ == "__main__":
 
 function renderPythonToolMeta(tool: ToolDefinition): string {
   const description = tool.description || `Call ${tool.name}`;
-  const schemaStr = JSON.stringify(tool.inputSchema, null, 4)
-    .split("\n")
-    .join("\n            ");
+  const schemaStr = JSON.stringify(tool.inputSchema, null, 4).split("\n").join("\n            ");
   return `        mcp_types.Tool(
             name=${JSON.stringify(tool.name)},
             description=${JSON.stringify(description)},
@@ -99,9 +92,7 @@ function renderPythonToolMeta(tool: ToolDefinition): string {
 
 function renderPythonToolDispatch(tool: ToolDefinition): string {
   const paramNames = tool.parameters.map((p) => p.name);
-  const kwArgs = paramNames
-    .map((n) => `${n}=arguments.get(${JSON.stringify(n)})`)
-    .join(", ");
+  const kwArgs = paramNames.map((n) => `${n}=arguments.get(${JSON.stringify(n)})`).join(", ");
   const callExpr = `${tool.name}(${kwArgs})`;
   return `        case ${JSON.stringify(tool.name)}:
             result = ${callExpr}

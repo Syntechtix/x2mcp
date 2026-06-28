@@ -37,10 +37,7 @@ function addSharedOptions(cmd: Command): Command {
 // ─── generate ─────────────────────────────────────────────────────────────────
 
 addSharedOptions(
-  program
-    .command("generate")
-    .alias("gen")
-    .description("Generate an MCP server from source code"),
+  program.command("generate").alias("gen").description("Generate an MCP server from source code"),
 ).action(async (inputPath: string, opts: SharedOpts) => {
   const { orchestrator, config } = setup(opts);
   try {
@@ -60,9 +57,7 @@ addSharedOptions(
 // ─── init (alias for generate with friendlier output) ─────────────────────────
 
 addSharedOptions(
-  program
-    .command("init")
-    .description("Scaffold an MCP server from source code (same as generate)"),
+  program.command("init").description("Scaffold an MCP server from source code (same as generate)"),
 ).action(async (inputPath: string, opts: SharedOpts) => {
   console.log(`🔍  Analysing ${inputPath} …`);
   const { orchestrator, config } = setup(opts);
@@ -84,9 +79,7 @@ addSharedOptions(
 // ─── run ──────────────────────────────────────────────────────────────────────
 
 addSharedOptions(
-  program
-    .command("run")
-    .description("Generate and start the MCP server on stdio"),
+  program.command("run").description("Generate and start the MCP server on stdio"),
 ).action(async (inputPath: string, opts: SharedOpts) => {
   console.error(`🔍  Generating MCP server for ${inputPath} …`);
   const { orchestrator, config } = setup(opts);

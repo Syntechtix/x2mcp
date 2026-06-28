@@ -11,10 +11,7 @@ import { relativeImport } from "./extractor.js";
  * - Registers one MCP tool per ToolDefinition.
  * - Handles stdio transport.
  */
-export async function generateTypeScript(
-  spec: MCPServerSpec,
-  outputDir: string,
-): Promise<string> {
+export async function generateTypeScript(spec: MCPServerSpec, outputDir: string): Promise<string> {
   const serverFile = path.join(outputDir, "server.ts");
   const moduleImport = relativeImport(outputDir, spec.sourcePath);
 

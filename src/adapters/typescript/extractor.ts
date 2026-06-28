@@ -13,12 +13,9 @@ import type { JSONSchema, ParameterDefinition, ToolDefinition } from "../../core
 export async function extractTypeScript(filePath: string): Promise<ToolDefinition[]> {
   let ts: typeof import("typescript");
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ts = (await import("typescript")).default as typeof import("typescript");
   } catch {
-    throw new Error(
-      "TypeScript compiler API not found. Run: npm install typescript",
-    );
+    throw new Error("TypeScript compiler API not found. Run: npm install typescript");
   }
 
   const source = fs.readFileSync(filePath, "utf-8");
@@ -33,31 +30,26 @@ export async function extractTypeScript(filePath: string): Promise<ToolDefinitio
 
   function visit(node: import("typescript").Node): void {
     // Exported function declarations: export function foo(...) {}
-    if (
-      ts.isFunctionDeclaration(node) &&
-      node.name &&
-      hasExportModifier(ts, node)
-    ) {
-      const tool = buildTool(ts, node, node.name.text, filePath, sourceFile, source);
+    if (ts.isFunctionDeclaration(node) && node.name && hasExportModifier(ts, node)) {
+      const tool = buildTool(ts, node, node.name.text, node, filePath, sourceFile, source);
       if (tool) tools.push(tool);
     }
 
     // Exported variable declarations: export const foo = (...) => {}
-    if (
-      ts.isVariableStatement(node) &&
-      hasExportModifier(ts, node)
-    ) {
+    if (ts.isVariableStatement(node) && hasExportModifier(ts, node)) {
       for (const decl of node.declarationList.declarations) {
         if (
           ts.isIdentifier(decl.name) &&
           decl.initializer &&
-          (ts.isArrowFunction(decl.initializer) ||
-            ts.isFunctionExpression(decl.initializer))
+          (ts.isArrowFunction(decl.initializer) || ts.isFunctionExpression(decl.initializer))
         ) {
+          // The JSDoc comment belongs to the VariableStatement, not the arrow
+          // function itself, so pass `node` (the statement) as the doc node.
           const tool = buildTool(
             ts,
             decl.initializer,
             decl.name.text,
+            node,
             filePath,
             sourceFile,
             source,
@@ -83,6 +75,7 @@ function buildTool(
   ts: typeof import("typescript"),
   node: FunctionLike,
   name: string,
+  docNode: import("typescript").Node,
   filePath: string,
   sourceFile: import("typescript").SourceFile,
   source: string,
@@ -98,7 +91,7 @@ function buildTool(
     const schema = typeNodeToSchema(ts, param.type);
     const paramDef: ParameterDefinition = {
       name: paramName,
-      description: extractParamDoc(name, paramName, sourceFile, source),
+      description: extractParamDoc(name, paramName, source),
       schema,
       required: !isOptional,
     };
@@ -107,8 +100,8 @@ function buildTool(
     if (!isOptional) required.push(paramName);
   }
 
-  const description = extractJsDoc(node, sourceFile, source);
-  const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+  const description = extractJsDoc(docNode, sourceFile, source);
+  const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
 
   return {
     name,
@@ -160,11 +153,7 @@ function typeNodeToSchema(
       const props: Record<string, JSONSchema> = {};
       const req: string[] = [];
       for (const member of tl.members) {
-        if (
-          ts.isPropertySignature(member) &&
-          member.name &&
-          ts.isIdentifier(member.name)
-        ) {
+        if (ts.isPropertySignature(member) && member.name && ts.isIdentifier(member.name)) {
           props[member.name.text] = typeNodeToSchema(ts, member.type);
           if (!member.questionToken) req.push(member.name.text);
         }
@@ -192,36 +181,41 @@ function typeNodeToSchema(
   }
 }
 
-/** Extract the leading JSDoc/TSDoc comment for a node. */
+/** Extract the leading JSDoc/TSDoc comment for a node.
+ *
+ * JSDoc comments are part of the node's leading trivia — they live in the
+ * range [getFullStart(), getStart()].  We search that slice for the LAST
+ * /** ... *\/ block, which is the one directly attached to the node (earlier
+ * blocks may be file-level or other declarations' trailing trivia).
+ */
 function extractJsDoc(
   node: import("typescript").Node,
-  _sourceFile: import("typescript").SourceFile,
+  sourceFile: import("typescript").SourceFile,
   source: string,
 ): string {
-  const nodeStart = node.getFullStart();
-  const preceding = source.slice(0, nodeStart);
-  const docMatch = preceding.match(/\/\*\*\s*([\s\S]*?)\s*\*\/\s*$/);
-  if (!docMatch) {
-    // Try single-line comment
-    const lineMatch = preceding.match(/\/\/\s*(.+)\s*[\r\n]+\s*$/);
-    return lineMatch ? lineMatch[1].trim() : "";
+  const fullStart = node.getFullStart();
+  const start = node.getStart(sourceFile, /* includeJsDocComment */ false);
+  const trivia = source.slice(fullStart, start);
+
+  // Collect ALL /** ... */ blocks and take the last one
+  const allMatches = [...trivia.matchAll(/\/\*\*([\s\S]*?)\*\//g)];
+  if (allMatches.length > 0) {
+    const last = allMatches[allMatches.length - 1];
+    return last[1]
+      .split("\n")
+      .map((l) => l.replace(/^\s*\*\s?/, "").trim())
+      .filter(Boolean)
+      .filter((l) => !l.startsWith("@"))
+      .join(" ");
   }
-  // Strip leading " * " from each JSDoc line
-  return docMatch[1]
-    .split("\n")
-    .map((l) => l.replace(/^\s*\*\s?/, "").trim())
-    .filter(Boolean)
-    .filter((l) => !l.startsWith("@"))
-    .join(" ");
+
+  // Fall back to single-line comment immediately preceding the node
+  const lineMatch = trivia.match(/\/\/\s*(.+)\s*[\r\n]+\s*$/);
+  return lineMatch ? lineMatch[1].trim() : "";
 }
 
 /** Extract @param description for a specific parameter from JSDoc. */
-function extractParamDoc(
-  _funcName: string,
-  paramName: string,
-  _sourceFile: import("typescript").SourceFile,
-  source: string,
-): string {
+function extractParamDoc(_funcName: string, paramName: string, source: string): string {
   const re = new RegExp(`@param\\s+\\{?[^}]*\\}?\\s+${paramName}\\s+-?\\s*(.+)`);
   const match = source.match(re);
   return match ? match[1].trim() : "";

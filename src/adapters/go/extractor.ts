@@ -42,11 +42,7 @@ async function getCompiledBin(): Promise<string> {
   const binPath = path.join(tmpDir, binName);
 
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      "go",
-      ["build", "-o", binPath, GO_SCRIPT],
-      { stdio: "pipe" },
-    );
+    const child = spawn("go", ["build", "-o", binPath, GO_SCRIPT], { stdio: "pipe" });
     let stderr = "";
     child.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
     child.on("close", (code) => {
