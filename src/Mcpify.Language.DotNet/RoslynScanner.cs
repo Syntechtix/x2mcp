@@ -1,4 +1,5 @@
 using Mcpify.Core.Abstractions;
+using Mcpify.Core.IO;
 using Mcpify.Core.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -8,17 +9,24 @@ namespace Mcpify.Language.DotNet;
 
 public class RoslynScanner : IScanner
 {
+    private readonly IFileSystem _fileSystem;
+
+    public RoslynScanner(IFileSystem? fileSystem = null)
+    {
+        _fileSystem = fileSystem ?? new FileSystem();
+    }
+
     public ScannedSurface Scan(string sourcePath)
     {
-        var files = Directory.Exists(sourcePath)
-            ? Directory.GetFiles(sourcePath, "*.cs", SearchOption.AllDirectories)
+        var files = _fileSystem.DirectoryExists(sourcePath)
+            ? _fileSystem.GetFiles(sourcePath, "*.cs", SearchOption.AllDirectories)
             : [sourcePath];
 
         var types = new List<TypeDescriptor>();
 
         foreach (var file in files)
         {
-            var text = File.ReadAllText(file);
+            var text = _fileSystem.ReadAllText(file);
             var tree = CSharpSyntaxTree.ParseText(text);
             var root = tree.GetCompilationUnitRoot();
 

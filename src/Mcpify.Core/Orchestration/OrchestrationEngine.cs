@@ -1,4 +1,5 @@
 using Mcpify.Core.Abstractions;
+using Mcpify.Core.IO;
 using Mcpify.Core.Models;
 
 namespace Mcpify.Core.Orchestration;
@@ -7,15 +8,18 @@ public class OrchestrationEngine
 {
     private readonly IReadOnlyList<ILanguageModule> _modules;
     private readonly IProcessRunner _processRunner;
+    private readonly IFileSystem _fileSystem;
     private readonly string _generatedProjectsRoot;
 
     public OrchestrationEngine(
         IReadOnlyList<ILanguageModule> modules,
         IProcessRunner processRunner,
+        IFileSystem? fileSystem = null,
         string? generatedProjectsRoot = null)
     {
         _modules = modules;
         _processRunner = processRunner;
+        _fileSystem = fileSystem ?? new FileSystem();
         _generatedProjectsRoot = generatedProjectsRoot ?? Path.Combine(Path.GetTempPath(), "mcpify");
     }
 
@@ -42,8 +46,8 @@ public class OrchestrationEngine
         foreach (var file in emittedProject.Files)
         {
             var fullPath = Path.Combine(generatedProjectPath, file.RelativePath);
-            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-            await File.WriteAllTextAsync(fullPath, file.Content, ct);
+            _fileSystem.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            await _fileSystem.WriteAllTextAsync(fullPath, file.Content, ct);
         }
 
         var executable = module.Toolchain.RequiredExecutables[0];
@@ -65,14 +69,14 @@ public class OrchestrationEngine
         return module ?? throw new NoLanguageModuleException(sourcePath, extensions);
     }
 
-    private static HashSet<string> GetExtensions(string sourcePath)
+    private HashSet<string> GetExtensions(string sourcePath)
     {
-        if (File.Exists(sourcePath))
+        if (_fileSystem.FileExists(sourcePath))
             return [Path.GetExtension(sourcePath)];
 
-        if (Directory.Exists(sourcePath))
+        if (_fileSystem.DirectoryExists(sourcePath))
         {
-            return Directory
+            return _fileSystem
                 .GetFiles(sourcePath, "*", SearchOption.AllDirectories)
                 .Select(Path.GetExtension)
                 .Where(e => !string.IsNullOrEmpty(e))
