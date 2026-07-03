@@ -1,13 +1,20 @@
 using System.Text;
 using Mcpify.Core.Abstractions;
+using Mcpify.Core.IO;
 using Mcpify.Core.Models;
 
 namespace Mcpify.Language.DotNet;
 
 public class DotNetWrapperEmitter : IWrapperEmitter
 {
-    // Update this constant when the ModelContextProtocol package version changes.
     private const string McpSdkVersion = "0.1.0-preview.11";
+
+    private readonly IFileSystem _fileSystem;
+
+    public DotNetWrapperEmitter(IFileSystem? fileSystem = null)
+    {
+        _fileSystem = fileSystem ?? new FileSystem();
+    }
 
     public EmittedProject Emit(ScannedSurface surface, BuildContext context)
     {
@@ -27,15 +34,15 @@ public class DotNetWrapperEmitter : IWrapperEmitter
         return new EmittedProject(context.GeneratedProjectPath, files);
     }
 
-    private static string FindSourceCsproj(string sourcePath)
+    private string FindSourceCsproj(string sourcePath)
     {
-        var dir = File.Exists(sourcePath)
+        var dir = _fileSystem.FileExists(sourcePath)
             ? Path.GetDirectoryName(sourcePath)!
             : sourcePath;
 
-        if (Directory.Exists(dir))
+        if (_fileSystem.DirectoryExists(dir))
         {
-            var found = Directory
+            var found = _fileSystem
                 .GetFiles(dir, "*.csproj", SearchOption.TopDirectoryOnly)
                 .FirstOrDefault();
             if (found != null) return found;
