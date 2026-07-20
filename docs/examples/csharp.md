@@ -1,8 +1,15 @@
 # Example: wrapping a C# library
 
-`mcpify` scans a project with [Roslyn](https://github.com/dotnet/roslyn), finds every
+`x2mcp` scans a project with [Roslyn](https://github.com/dotnet/roslyn), finds every
 `public` method on every `public` class, and generates a companion MCP server project
 that references your original code and exposes those methods as MCP tools.
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) — `dotnet` must be on your
+  `PATH`. The generated `McpServer.csproj` hardcodes
+  `<TargetFramework>net10.0</TargetFramework>`, so .NET 10 specifically is required;
+  earlier SDKs (8.0, 9.0) can't build the wrapper.
 
 ## 1. The source project
 
@@ -30,10 +37,10 @@ public class Calculator
 }
 ```
 
-## 2. Run mcpify
+## 2. Run x2mcp
 
 ```bash
-mcpify ./Calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./Calculator --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
 - `./Calculator` — the source directory (an entire folder or a single `.cs` file both work)
@@ -43,8 +50,8 @@ mcpify ./Calculator --out ./dist/calculator-mcp --name calculator --transport st
 
 ## 3. What gets generated
 
-`mcpify` writes a temporary wrapper project (under `%TEMP%/mcpify/<name>` /
-`/tmp/mcpify/<name>`) that looks like this:
+`x2mcp` writes a temporary wrapper project (under `%TEMP%/x2mcp/<name>` /
+`/tmp/x2mcp/<name>`) that looks like this:
 
 ```
 calculator/
@@ -123,7 +130,7 @@ await builder.Build().RunAsync();
 
 ## 4. Build and publish
 
-`mcpify` then runs the .NET toolchain's publish command for you:
+`x2mcp` then runs the .NET toolchain's publish command for you:
 
 ```bash
 dotnet publish <generated-project> -c Release -o ./dist/calculator-mcp --self-contained

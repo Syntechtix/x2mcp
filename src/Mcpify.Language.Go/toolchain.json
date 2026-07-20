@@ -1,7 +1,0 @@
-{
-  "requiredExecutables": ["go"],
-  "buildCommand": "build -o {OutputPath}/{ServerName} {GeneratedProjectPath}",
-  "publishCommand": "build -o {OutputPath}/{ServerName} {GeneratedProjectPath}",
-  "supportedTransports": ["Stdio", "StreamableHttp"],
-  "sourceExtensions": [".go"]
-}

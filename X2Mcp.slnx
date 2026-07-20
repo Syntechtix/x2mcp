@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/X2Mcp.Cli/X2Mcp.Cli.csproj" />
+    <Project Path="src/X2Mcp.Core/X2Mcp.Core.csproj" />
+    <Project Path="src/X2Mcp.Language.DotNet/X2Mcp.Language.DotNet.csproj" />
+    <Project Path="src/X2Mcp.Language.Go/X2Mcp.Language.Go.csproj" />
+    <Project Path="src/X2Mcp.Language.Python/X2Mcp.Language.Python.csproj" />
+    <Project Path="src/X2Mcp.Language.Ruby/X2Mcp.Language.Ruby.csproj" />
+    <Project Path="src/X2Mcp.Language.Rust/X2Mcp.Language.Rust.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/integration/">
+    <Project Path="tests/integration/X2Mcp.Integration.Tests/X2Mcp.Integration.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/X2Mcp.Core.Tests/X2Mcp.Core.Tests.csproj" />
+    <Project Path="tests/unit/X2Mcp.Language.DotNet.Tests/X2Mcp.Language.DotNet.Tests.csproj" />
+  </Folder>
+</Solution>

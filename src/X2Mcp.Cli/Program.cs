@@ -1,0 +1,84 @@
+using System.CommandLine;
+using X2Mcp.Core.Models;
+using X2Mcp.Core.Orchestration;
+using X2Mcp.Core.Process;
+using X2Mcp.Language.DotNet;
+using X2Mcp.Language.Go;
+using X2Mcp.Language.Python;
+using X2Mcp.Language.Ruby;
+using X2Mcp.Language.Rust;
+
+var sourceArg = new Argument<string>(
+    name: "source",
+    description: "Path to the source code file or directory to wrap as an MCP server");
+
+var transportOption = new Option<string>(
+    name: "--transport",
+    getDefaultValue: () => "stdio",
+    description: "Transport to use: stdio or http");
+
+var outOption = new Option<string?>(
+    name: "--out",
+    getDefaultValue: () => null,
+    description: "Output directory for the built MCP server (defaults to ./dist/<name>-mcp)");
+
+var nameOption = new Option<string?>(
+    name: "--name",
+    getDefaultValue: () => null,
+    description: "Server name (defaults to the source directory or file name)");
+
+var rootCommand = new RootCommand("x2mcp — wrap any source code as a self-contained MCP server");
+rootCommand.AddArgument(sourceArg);
+rootCommand.AddOption(transportOption);
+rootCommand.AddOption(outOption);
+rootCommand.AddOption(nameOption);
+
+rootCommand.SetHandler(async (source, transportStr, output, name) =>
+{
+    var transport = transportStr.ToLowerInvariant() switch
+    {
+        "stdio" => Transport.Stdio,
+        "http"  => Transport.StreamableHttp,
+        _       => throw new InvalidOperationException(
+                        $"Unknown transport '{transportStr}'. Use 'stdio' or 'http'."),
+    };
+
+    var serverName = name
+        ?? Path.GetFileNameWithoutExtension(
+               source.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+        ?? "McpServer";
+
+    if (string.IsNullOrWhiteSpace(serverName))
+        serverName = "McpServer";
+
+    var outputPath = string.IsNullOrWhiteSpace(output)
+        ? Path.Combine("dist", $"{serverName}-mcp")
+        : output;
+
+    var modules = new[]
+    {
+        (X2Mcp.Core.Abstractions.ILanguageModule)new DotNetModule(),
+        new PythonModule(),
+        new GoModule(),
+        new RustModule(),
+        new RubyModule(),
+    };
+
+    var engine = new OrchestrationEngine(modules, new ProcessRunner());
+
+    Console.WriteLine($"Scanning {source}...");
+
+    var result = await engine.RunAsync(source, outputPath, serverName, transport, Console.WriteLine);
+
+    if (result.Success)
+    {
+        Console.WriteLine($"Done. MCP server written to: {result.OutputPath}");
+    }
+    else
+    {
+        Console.Error.WriteLine($"Build failed: {result.Error}");
+        Environment.Exit(1);
+    }
+}, sourceArg, transportOption, outOption, nameOption);
+
+return await rootCommand.InvokeAsync(args);

@@ -1,8 +1,14 @@
 # Example: wrapping a Ruby script (coming soon)
 
 > **Status:** The Ruby toolchain is registered (`ruby`, `bundle`), but `RubyScanner`
-> doesn't parse source yet — running `mcpify` against a `.rb` file today throws
+> doesn't parse source yet — running `x2mcp` against a `.rb` file today throws
 > `NotImplementedException`. This doc describes the intended flow.
+
+## Prerequisites
+
+- Ruby and [Bundler](https://bundler.io/) — `ruby` and `bundle` must both be on
+  your `PATH`. No minimum Ruby version is pinned yet, and only the `stdio`
+  transport is supported.
 
 ## 1. The source file
 
@@ -22,12 +28,12 @@ end
 ## 2. Planned invocation
 
 ```bash
-mcpify ./calculator.rb --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator.rb --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
 ## 3. Planned toolchain
 
-Once the scanner is implemented, `mcpify` will emit a wrapper `server.rb` exposing
+Once the scanner is implemented, `x2mcp` will emit a wrapper `server.rb` exposing
 each public method as an MCP tool, then launch it with:
 
 ```bash

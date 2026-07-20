@@ -1,8 +1,8 @@
-# mcpify
+# x2mcp
 
 Create a native-language MCP server wrapper around any language
 
-`mcpify` scans an existing source file or project, discovers its public
+`x2mcp` scans an existing source file or project, discovers its public
 functions/methods, and generates a self-contained [Model Context Protocol
 (MCP)](https://modelcontextprotocol.io/) server that exposes them as MCP tools —
 without touching or forking your original code. It emits a small wrapper project
@@ -18,7 +18,7 @@ into a runnable server binary using that language's own toolchain.
 3. **Emit** — the module's wrapper emitter generates a companion project: an entry
    point that starts an MCP server plus one tool class per scanned type, each method
    delegating straight to your original code.
-4. **Build** — `mcpify` shells out to the language's own toolchain (e.g.
+4. **Build** — `x2mcp` shells out to the language's own toolchain (e.g.
    `dotnet publish`, `go build`, `cargo build`, `pyinstaller`) to produce a runnable
    server at the requested output path.
 
@@ -37,7 +37,7 @@ language, including what's planned for the ones still in progress.
 
 ## Installation
 
-`mcpify` is a .NET project — it's not published as a packaged CLI tool yet, so for
+`x2mcp` is a .NET project — it's not published as a packaged CLI tool yet, so for
 now this is how you run it. (This section will be updated once it ships as an
 installable tool.)
 
@@ -45,17 +45,17 @@ Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download) or later.
 
 ```bash
 git clone https://github.com/Syntechtix/mcpify.git
-cd mcpify
+cd x2mcp
 dotnet build
 ```
 
-Run it via `dotnet run --project src/Mcpify.Cli`, or invoke the built `mcpify`
-executable directly from `src/Mcpify.Cli/bin/Debug/net10.0/`.
+Run it via `dotnet run --project src/X2Mcp.Cli`, or invoke the built `x2mcp`
+executable directly from `src/X2Mcp.Cli/bin/Debug/net10.0/`.
 
 ## CLI syntax
 
 ```
-mcpify <source> [--out <path>] [--transport <stdio|http>] [--name <name>]
+x2mcp <source> [--out <path>] [--transport <stdio|http>] [--name <name>]
 ```
 
 | Argument / Option | Required | Default | Description |
@@ -69,7 +69,7 @@ mcpify <source> [--out <path>] [--transport <stdio|http>] [--name <name>]
 ### Example
 
 ```bash
-mcpify ./Calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./Calculator --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
 ```

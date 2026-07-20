@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>X2Mcp.Language.Go</AssemblyName>
+    <RootNamespace>X2Mcp.Language.Go</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="toolchain.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../X2Mcp.Core/X2Mcp.Core.csproj" />
+  </ItemGroup>
+</Project>

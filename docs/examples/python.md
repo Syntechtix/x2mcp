@@ -1,8 +1,14 @@
 # Example: wrapping a Python script (coming soon)
 
 > **Status:** The Python toolchain is registered (`python`, `pyinstaller`), but
-> `PythonScanner` doesn't parse source yet — running `mcpify` against a `.py` file
+> `PythonScanner` doesn't parse source yet — running `x2mcp` against a `.py` file
 > today throws `NotImplementedException`. This doc describes the intended flow.
+
+## Prerequisites
+
+- Python 3 and [PyInstaller](https://pyinstaller.org/) — `python` and
+  `pyinstaller` must both be on your `PATH` so `x2mcp` can freeze the generated
+  wrapper into a single executable. No minimum Python version is pinned yet.
 
 ## 1. The source file
 
@@ -19,12 +25,12 @@ class Calculator:
 ## 2. Planned invocation
 
 ```bash
-mcpify ./calculator.py --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator.py --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
 ## 3. Planned toolchain
 
-Once the scanner is implemented, `mcpify` will emit a wrapper `main.py` that exposes
+Once the scanner is implemented, `x2mcp` will emit a wrapper `main.py` that exposes
 each public method as an MCP tool, then freeze it into a single executable with:
 
 ```bash

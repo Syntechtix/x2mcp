@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>X2Mcp.Core</AssemblyName>
+    <RootNamespace>X2Mcp.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

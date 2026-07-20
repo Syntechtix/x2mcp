@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>x2mcp</AssemblyName>
+    <RootNamespace>X2Mcp.Cli</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../X2Mcp.Core/X2Mcp.Core.csproj" />
+    <ProjectReference Include="../X2Mcp.Language.DotNet/X2Mcp.Language.DotNet.csproj" />
+    <ProjectReference Include="../X2Mcp.Language.Python/X2Mcp.Language.Python.csproj" />
+    <ProjectReference Include="../X2Mcp.Language.Go/X2Mcp.Language.Go.csproj" />
+    <ProjectReference Include="../X2Mcp.Language.Rust/X2Mcp.Language.Rust.csproj" />
+    <ProjectReference Include="../X2Mcp.Language.Ruby/X2Mcp.Language.Ruby.csproj" />
+  </ItemGroup>
+</Project>
