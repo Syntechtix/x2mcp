@@ -82,6 +82,64 @@ public class OrchestrationEngineTests : IDisposable
         Assert.True(result.Success);
     }
 
+    [Fact]
+    public async Task RunAsync_ReportsDetectedLanguageAndStdioTransport()
+    {
+        var sourceDir = CreateSourceDir("src5", ".stub");
+        var fake = new FakeProcessRunner();
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+        var messages = new List<string>();
+
+        await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out5"), "ProgSvr", Transport.Stdio, messages.Add);
+
+        Assert.Equal(
+            ["Detected language: stub", "Creating stdio server..."],
+            messages);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReportsHttpTransport()
+    {
+        var sourceDir = CreateSourceDir("src6", ".stub");
+        var fake = new FakeProcessRunner();
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+        var messages = new List<string>();
+
+        await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out6"), "ProgSvr2", Transport.StreamableHttp, messages.Add);
+
+        Assert.Equal(
+            ["Detected language: stub", "Creating http server..."],
+            messages);
+    }
+
+    [Fact]
+    public async Task RunAsync_NoProgressCallback_DoesNotThrow()
+    {
+        var sourceDir = CreateSourceDir("src7", ".stub");
+        var fake = new FakeProcessRunner();
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out7"), "ProgSvr3", Transport.Stdio);
+
+        Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task RunAsync_ProcessFails_ProgressStillReportsBeforeFailure()
+    {
+        var sourceDir = CreateSourceDir("src8", ".stub");
+        var fake = new FakeProcessRunner { DefaultResult = new ProcessResult(1, string.Empty, "build error") };
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+        var messages = new List<string>();
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out8"), "ProgSvr4", Transport.Stdio, messages.Add);
+
+        Assert.False(result.Success);
+        Assert.Equal(
+            ["Detected language: stub", "Creating stdio server..."],
+            messages);
+    }
+
     private string CreateSourceDir(string name, string ext)
     {
         var dir = Path.Combine(_tempDir, name);

@@ -28,9 +28,12 @@ public class OrchestrationEngine
         string outputPath,
         string serverName,
         Transport transport,
+        Action<string>? progress = null,
         CancellationToken ct = default)
     {
         var module = DetectModule(sourcePath);
+        progress?.Invoke($"Detected language: {module.Language}");
+
         var generatedProjectPath = Path.Combine(_generatedProjectsRoot, serverName);
 
         var context = new BuildContext(
@@ -49,6 +52,9 @@ public class OrchestrationEngine
             _fileSystem.CreateDirectory(Path.GetDirectoryName(fullPath)!);
             await _fileSystem.WriteAllTextAsync(fullPath, file.Content, ct);
         }
+
+        var transportLabel = transport == Transport.Stdio ? "stdio" : "http";
+        progress?.Invoke($"Creating {transportLabel} server...");
 
         var executable = module.Toolchain.RequiredExecutables[0];
         var resolvedArgs = CommandTokenResolver.Resolve(module.Toolchain.PublishCommand, context);

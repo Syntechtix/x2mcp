@@ -8,7 +8,6 @@
     <Project Path="src/Mcpify.Language.Ruby/Mcpify.Language.Ruby.csproj" />
     <Project Path="src/Mcpify.Language.Rust/Mcpify.Language.Rust.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
   <Folder Name="/tests/integration/">
     <Project Path="tests/integration/Mcpify.Integration.Tests/Mcpify.Integration.Tests.csproj" />
   </Folder>

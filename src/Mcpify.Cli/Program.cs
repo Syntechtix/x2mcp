@@ -17,9 +17,10 @@ var transportOption = new Option<string>(
     getDefaultValue: () => "stdio",
     description: "Transport to use: stdio or http");
 
-var outOption = new Option<string>(
+var outOption = new Option<string?>(
     name: "--out",
-    description: "Output directory for the built MCP server");
+    getDefaultValue: () => null,
+    description: "Output directory for the built MCP server (defaults to ./dist/<name>-mcp)");
 
 var nameOption = new Option<string?>(
     name: "--name",
@@ -50,6 +51,10 @@ rootCommand.SetHandler(async (source, transportStr, output, name) =>
     if (string.IsNullOrWhiteSpace(serverName))
         serverName = "McpServer";
 
+    var outputPath = string.IsNullOrWhiteSpace(output)
+        ? Path.Combine("dist", $"{serverName}-mcp")
+        : output;
+
     var modules = new[]
     {
         (Mcpify.Core.Abstractions.ILanguageModule)new DotNetModule(),
@@ -63,7 +68,7 @@ rootCommand.SetHandler(async (source, transportStr, output, name) =>
 
     Console.WriteLine($"Scanning {source}...");
 
-    var result = await engine.RunAsync(source, output, serverName, transport);
+    var result = await engine.RunAsync(source, outputPath, serverName, transport, Console.WriteLine);
 
     if (result.Success)
     {
