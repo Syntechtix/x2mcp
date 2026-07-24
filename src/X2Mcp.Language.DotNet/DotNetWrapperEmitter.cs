@@ -7,7 +7,7 @@ namespace X2Mcp.Language.DotNet;
 
 public class DotNetWrapperEmitter : IWrapperEmitter
 {
-    private const string McpSdkVersion = "0.1.0-preview.11";
+    private const string McpSdkVersion = "1.4.1";
 
     private readonly IFileSystem _fileSystem;
 
@@ -68,7 +68,7 @@ public class DotNetWrapperEmitter : IWrapperEmitter
               </PropertyGroup>
               <ItemGroup>
                 <PackageReference Include="ModelContextProtocol" Version="{McpSdkVersion}" />
-                <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+                <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
               </ItemGroup>
               <ItemGroup>
                 <ProjectReference Include="{sourceProjectRef}" />
@@ -125,6 +125,7 @@ public class DotNetWrapperEmitter : IWrapperEmitter
                 {{singletonBlock}}
                 services
                     .AddMcpServer()
+                    .WithHttpTransport(options => options.Stateless = true)
                 {{toolsBlock}};
 
                 var app = builder.Build();

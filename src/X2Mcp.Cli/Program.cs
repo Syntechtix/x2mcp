@@ -8,33 +8,42 @@ using X2Mcp.Language.Python;
 using X2Mcp.Language.Ruby;
 using X2Mcp.Language.Rust;
 
-var sourceArg = new Argument<string>(
-    name: "source",
-    description: "Path to the source code file or directory to wrap as an MCP server");
+var sourceArg = new Argument<string>("source")
+{
+    Description = "Path to the source code file or directory to wrap as an MCP server",
+};
 
-var transportOption = new Option<string>(
-    name: "--transport",
-    getDefaultValue: () => "stdio",
-    description: "Transport to use: stdio or http");
+var transportOption = new Option<string>("--transport")
+{
+    Description = "Transport to use: stdio or http",
+    DefaultValueFactory = _ => "stdio",
+};
 
-var outOption = new Option<string?>(
-    name: "--out",
-    getDefaultValue: () => null,
-    description: "Output directory for the built MCP server (defaults to ./dist/<name>-mcp)");
+var outOption = new Option<string?>("--out")
+{
+    Description = "Output directory for the built MCP server (defaults to ./dist/<name>-mcp)",
+    DefaultValueFactory = _ => null,
+};
 
-var nameOption = new Option<string?>(
-    name: "--name",
-    getDefaultValue: () => null,
-    description: "Server name (defaults to the source directory or file name)");
+var nameOption = new Option<string?>("--name")
+{
+    Description = "Server name (defaults to the source directory or file name)",
+    DefaultValueFactory = _ => null,
+};
 
 var rootCommand = new RootCommand("x2mcp — wrap any source code as a self-contained MCP server");
-rootCommand.AddArgument(sourceArg);
-rootCommand.AddOption(transportOption);
-rootCommand.AddOption(outOption);
-rootCommand.AddOption(nameOption);
+rootCommand.Arguments.Add(sourceArg);
+rootCommand.Options.Add(transportOption);
+rootCommand.Options.Add(outOption);
+rootCommand.Options.Add(nameOption);
 
-rootCommand.SetHandler(async (source, transportStr, output, name) =>
+rootCommand.SetAction(async (parseResult, cancellationToken) =>
 {
+    var source = parseResult.GetValue(sourceArg)!;
+    var transportStr = parseResult.GetValue(transportOption)!;
+    var output = parseResult.GetValue(outOption);
+    var name = parseResult.GetValue(nameOption);
+
     var transport = transportStr.ToLowerInvariant() switch
     {
         "stdio" => Transport.Stdio,
@@ -73,12 +82,11 @@ rootCommand.SetHandler(async (source, transportStr, output, name) =>
     if (result.Success)
     {
         Console.WriteLine($"Done. MCP server written to: {result.OutputPath}");
+        return 0;
     }
-    else
-    {
-        Console.Error.WriteLine($"Build failed: {result.Error}");
-        Environment.Exit(1);
-    }
-}, sourceArg, transportOption, outOption, nameOption);
 
-return await rootCommand.InvokeAsync(args);
+    Console.Error.WriteLine($"Build failed: {result.Error}");
+    return 1;
+});
+
+return await rootCommand.Parse(args).InvokeAsync();

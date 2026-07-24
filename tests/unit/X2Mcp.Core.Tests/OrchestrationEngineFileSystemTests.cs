@@ -65,7 +65,7 @@ public class OrchestrationEngineFileSystemTests
 
         fs.Received().CreateDirectory(Arg.Any<string>());
         await fs.Received().WriteAllTextAsync(
-            Arg.Is<string>(p => p.Contains("MySvr")),
+            Arg.Is<string>(p => p != null && p.Contains("MySvr")),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>());
     }

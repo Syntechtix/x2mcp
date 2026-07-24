@@ -72,6 +72,7 @@ public class DotNetWrapperEmitterTests : IDisposable
 
         Assert.Contains("WithStdioServerTransport", programCs);
         Assert.DoesNotContain("MapMcp", programCs);
+        Assert.DoesNotContain("WithHttpTransport", programCs);
     }
 
     [Fact]
@@ -85,6 +86,8 @@ public class DotNetWrapperEmitterTests : IDisposable
         var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
 
         Assert.Contains("MapMcp", programCs);
+        Assert.Contains("WithHttpTransport", programCs);
+        Assert.Contains("options.Stateless = true", programCs);
         Assert.DoesNotContain("WithStdioServerTransport", programCs);
         Assert.Contains("Microsoft.NET.Sdk.Web", csproj);
     }
