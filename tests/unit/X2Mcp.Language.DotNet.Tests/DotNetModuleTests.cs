@@ -1,3 +1,4 @@
+using Xunit;
 using X2Mcp.Core.Models;
 using X2Mcp.Language.DotNet;
 

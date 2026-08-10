@@ -25,5 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/X2Mcp.Core/X2Mcp.Core.csproj" />
     <ProjectReference Include="../../../src/X2Mcp.Language.DotNet/X2Mcp.Language.DotNet.csproj" />
+    <ProjectReference Include="../../../src/X2Mcp.Language.Go/X2Mcp.Language.Go.csproj" />
   </ItemGroup>
 </Project>

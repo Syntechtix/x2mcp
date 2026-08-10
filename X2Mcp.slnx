@@ -15,5 +15,6 @@
   <Folder Name="/tests/unit/">
     <Project Path="tests/unit/X2Mcp.Core.Tests/X2Mcp.Core.Tests.csproj" />
     <Project Path="tests/unit/X2Mcp.Language.DotNet.Tests/X2Mcp.Language.DotNet.Tests.csproj" />
+    <Project Path="tests/unit/X2Mcp.Language.Go.Tests/X2Mcp.Language.Go.Tests.csproj" />
   </Folder>
 </Solution>
