@@ -127,9 +127,10 @@ jobs:
 
   all-checks-passed:
     name: All Checks Passed
-    needs: [build-and-unit-test, integration-dotnet, integration-go]
+    needs: [build-and-unit-test, integration-dotnet, integration-go, go-fixtures-lint]
     if: always()
     runs-on: ubuntu-latest
+    
     steps:
       - name: Verify All Required Jobs Passed
         run: |
