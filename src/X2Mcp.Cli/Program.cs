@@ -47,8 +47,8 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
     var transport = transportStr.ToLowerInvariant() switch
     {
         "stdio" => Transport.Stdio,
-        "http"  => Transport.StreamableHttp,
-        _       => throw new InvalidOperationException(
+        "http" => Transport.StreamableHttp,
+        _ => throw new InvalidOperationException(
                         $"Unknown transport '{transportStr}'. Use 'stdio' or 'http'."),
     };
 

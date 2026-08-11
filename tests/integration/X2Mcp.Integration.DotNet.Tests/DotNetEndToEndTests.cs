@@ -3,7 +3,7 @@ using X2Mcp.Core.Orchestration;
 using X2Mcp.Core.Process;
 using X2Mcp.Language.DotNet;
 
-namespace X2Mcp.Integration.Tests;
+namespace X2Mcp.Integration.DotNet.Tests;
 
 /// <summary>
 /// End-to-end tests that run the full scan → emit → build pipeline.
@@ -47,7 +47,7 @@ public class DotNetEndToEndTests : IDisposable
         Assert.True(result.Success, $"Build failed: {result.Error}");
         Assert.True(Directory.Exists(outputDir), "Output directory was not created.");
 
-        var binaryName = OperatingSystem.IsWindows() ? "DotNetSampleLib.exe" : "DotNetSampleLib";
+        var binaryName = OperatingSystem.IsWindows() ? "McpServer.exe" : "McpServer";
         Assert.True(
             File.Exists(Path.Combine(outputDir, binaryName)),
             $"Binary not found at {Path.Combine(outputDir, binaryName)}");

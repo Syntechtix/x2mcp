@@ -3,7 +3,7 @@ using X2Mcp.Core.Orchestration;
 using X2Mcp.Core.Process;
 using X2Mcp.Language.Go;
 
-namespace X2Mcp.Integration.Tests;
+namespace X2Mcp.Integration.Go.Tests;
 
 /// <summary>
 /// End-to-end tests that run the full scan → emit → build pipeline.

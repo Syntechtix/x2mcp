@@ -3,11 +3,11 @@
 Create a native-language MCP server wrapper around any language
 
 `x2mcp` scans an existing source file or project, discovers its public
-functions/methods, and generates a self-contained [Model Context Protocol
-(MCP)](https://modelcontextprotocol.io/) server that exposes them as MCP tools —
-without touching or forking your original code. It emits a small wrapper project
-next to your source, wires up the target language's native MCP SDK, and builds it
-into a runnable server binary using that language's own toolchain.
+functions/methods, and generates a self-contained, stateless [Model Context
+Protocol (MCP)](https://modelcontextprotocol.io/) server that exposes them as MCP
+tools — without touching or forking your original code. It emits a small wrapper
+project next to your source, wires up the target language's native MCP SDK, and
+builds it into a runnable server binary using that language's own toolchain.
 
 ## How it works
 

@@ -72,7 +72,7 @@ public class RoslynScanner : IScanner
                 return ns.Name.ToString();
             if (parent is FileScopedNamespaceDeclarationSyntax fns)
                 return fns.Name.ToString();
-                
+
             parent = parent.Parent;
         }
         return string.Empty;

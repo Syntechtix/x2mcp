@@ -68,7 +68,8 @@ cat coveragereport/Summary.txt
 - [.github/workflows/build.yml](.github/workflows/build.yml) — runs on `push`/`pull_request` to `main`. Jobs: `build-and-unit-test` (format check, build, unit tests, coverage collection + 100% line-coverage gate + summary), `integration-dotnet`, `integration-go` (installs the Go toolchain), `go-fixtures-lint` (path-filtered `gofmt` check), `all-checks-passed` (required-status gate — fails if any of the above jobs fail).
 - [.github/workflows/publish.yml](.github/workflows/publish.yml) — manual `workflow_dispatch` only. Inputs: `bump` (patch/minor/major) and an optional freeform `suffix` (e.g. `beta.1`) — always combinable. Computes the next SemVer tag from the latest `vX.Y.Z` git tag (falls back to `v0.0.0` if none exist), tags + pushes the release, packs `X2Mcp.Cli` as a tool, and publishes to NuGet.org via **Trusted Publishing** (OIDC `NuGet/login` action) — no long-lived `NUGET_API_KEY` secret is used; requires a Trusted Publishing policy configured on nuget.org for this repo (`Syntechtix/x2mcp`, workflow file `publish.yml`) and a `NUGET_USER` secret holding the nuget.org profile name.
 - 2-space indentation, matches `actions/*` action versions already pinned in these files — keep new steps consistent with the existing style rather than introducing a different formatting convention.
-- Adding a new target language's E2E test class (e.g. `PythonEndToEndTests`) should get its own `integration-<language>` job in `build.yml`, installing only that language's toolchain, following the `integration-go` pattern.
+- Every job and every step must have a `name:` — no unnamed/anonymous steps or jobs. Names are Pascal Case (e.g. `Run Unit Tests`, `Verify Formatting`) and describe the action generically — never embed literal project paths, file names, CLI flags, or filter strings in a `name:` (those belong in the `run:` command itself).
+- Adding a new target language's E2E test class (e.g. `PythonEndToEndTests`) should get its own `tests/integration/X2Mcp.Integration.<Language>.Tests` project and its own `integration-<language>` job in `build.yml`, installing only that language's toolchain, following the `X2Mcp.Integration.Go.Tests`/`integration-go` pattern.
 
 ## Project layout
 
@@ -76,4 +77,4 @@ cat coveragereport/Summary.txt
 - `src/X2Mcp.Cli` — CLI entry point (`x2mcp`), packaged as a .NET global tool.
 - `src/X2Mcp.Language.{DotNet,Go,Python,Rust,Ruby}` — per-language scanner + wrapper emitter modules.
 - `tests/unit/*.Tests` — unit tests per project.
-- `tests/integration/X2Mcp.Integration.Tests` — cross-cutting E2E tests (scan → emit → build) per target language, gated by the `Integration` trait.
+- `tests/integration/X2Mcp.Integration.{DotNet,Go}.Tests` — one E2E test project per target language (scan → emit → build), each referencing only its own language module project, gated by the `Integration` trait.

@@ -10,7 +10,8 @@
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/integration/">
-    <Project Path="tests/integration/X2Mcp.Integration.Tests/X2Mcp.Integration.Tests.csproj" />
+    <Project Path="tests/integration/X2Mcp.Integration.DotNet.Tests/X2Mcp.Integration.DotNet.Tests.csproj" />
+    <Project Path="tests/integration/X2Mcp.Integration.Go.Tests/X2Mcp.Integration.Go.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/unit/">
     <Project Path="tests/unit/X2Mcp.Core.Tests/X2Mcp.Core.Tests.csproj" />

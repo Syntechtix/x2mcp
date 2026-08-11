@@ -14,36 +14,43 @@ env:
 
 jobs:
   build-and-unit-test:
+    name: Build And Unit Test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - run: dotnet restore X2Mcp.slnx
-      - run: dotnet format X2Mcp.slnx --verify-no-changes
-      - run: dotnet build X2Mcp.slnx --no-restore -c Release
+      - name: Restore Dependencies
+        run: dotnet restore X2Mcp.slnx
+      - name: Verify Formatting
+        run: dotnet format X2Mcp.slnx --verify-no-changes
+      - name: Build Solution
+        run: dotnet build X2Mcp.slnx --no-restore -c Release
 
-      - run: >
+      - name: Run Unit Tests
+        run: >
           dotnet test X2Mcp.slnx --no-build -c Release --filter "Category!=Integration"
           --collect:"XPlat Code Coverage" --results-directory ./coverage
 
-      - name: Install reportgenerator
+      - name: Install Coverage Report Generator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
-      - name: Generate coverage report
+      - name: Generate Coverage Report
         run: >
           reportgenerator -reports:"coverage/**/coverage.cobertura.xml"
           -targetdir:coveragereport
           -reporttypes:"MarkdownSummaryGithub;Cobertura"
           -classfilters:"-System.Text.RegularExpressions.Generated*"
 
-      - name: Publish coverage summary
+      - name: Publish Coverage Summary
         run: cat coveragereport/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Enforce 100% line coverage
+      - name: Enforce Full Line Coverage
         run: |
           coverage=$(grep -oP '(?<=<coverage line-rate=")[^"]+' coveragereport/Cobertura.xml | head -1)
           percent=$(awk -v c="$coverage" 'BEGIN { printf "%.2f", c * 100 }')
@@ -55,59 +62,75 @@ jobs:
           fi
 
   integration-dotnet:
+    name: .NET Integration Test
     needs: build-and-unit-test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - run: dotnet restore X2Mcp.slnx
-      - run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~DotNetEndToEndTests"
+      - name: Restore Dependencies
+        run: dotnet restore X2Mcp.slnx
+      - name: Run .NET Integration Tests
+        run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~DotNetEndToEndTests"
 
   integration-go:
+    name: Go Integration Test
     needs: build-and-unit-test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: "stable"
 
-      - run: dotnet restore X2Mcp.slnx
-      - run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~GoEndToEndTests"
+      - name: Restore Dependencies
+        run: dotnet restore X2Mcp.slnx
+      - name: Run Go Integration Tests
+        run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~GoEndToEndTests"
 
   go-fixtures-lint:
+    name: Go Fixtures Lint
     runs-on: ubuntu-latest
     if: |
       contains(github.event.head_commit.modified, 'tests/unit/X2Mcp.Language.Go.Tests') ||
       contains(github.event.head_commit.modified, 'tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib')
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: "stable"
 
-      - run: gofmt -l -d tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib
-      - name: Fail on unformatted files
+      - name: Show Formatting Diff
+        run: gofmt -l -d tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib
+      - name: Fail On Unformatted Files
         run: |
           test -z "$(gofmt -l tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib)"
 
   all-checks-passed:
+    name: All Checks Passed
     needs: [build-and-unit-test, integration-dotnet, integration-go]
     if: always()
     runs-on: ubuntu-latest
-    
     steps:
-      - run: |
+      - name: Verify All Required Jobs Passed
+        run: |
           if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
             echo "One or more required jobs failed."
             exit 1
