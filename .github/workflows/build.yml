@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -96,6 +96,7 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version: "stable"
+          cache: false
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
@@ -107,21 +108,22 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       contains(github.event.head_commit.modified, 'tests/unit/X2Mcp.Language.Go.Tests') ||
-      contains(github.event.head_commit.modified, 'tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib')
+      contains(github.event.head_commit.modified, 'tests/integration/X2Mcp.Integration.Go.Tests/Fixtures/GoSampleLib')
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
           go-version: "stable"
+          cache: false
 
       - name: Show Formatting Diff
-        run: gofmt -l -d tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib
+        run: gofmt -l -d tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Go.Tests/Fixtures/GoSampleLib
       - name: Fail On Unformatted Files
         run: |
-          test -z "$(gofmt -l tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib)"
+          test -z "$(gofmt -l tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Go.Tests/Fixtures/GoSampleLib)"
 
   all-checks-passed:
     name: All Checks Passed
