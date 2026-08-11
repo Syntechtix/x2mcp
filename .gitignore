@@ -6,6 +6,8 @@ obj/
 .idea/
 .vscode/
 dist/
+coverage*/
+coveragereport*/
 __azurite_db_*__.json
 __blobstorage__/
 __queuestorage__/

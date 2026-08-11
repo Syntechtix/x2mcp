@@ -3,6 +3,14 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>x2mcp</AssemblyName>
     <RootNamespace>X2Mcp.Cli</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>x2mcp</ToolCommandName>
+    <PackageId>x2mcp</PackageId>
+    <Authors>Syntechtix</Authors>
+    <Description>Wraps existing source code as a Model Context Protocol (MCP) server, generated and built in the source's own native language (C#, Go, ...) — not a .NET-only wrapper.</Description>
+    <RepositoryUrl>https://github.com/Syntechtix/x2mcp</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.10" />

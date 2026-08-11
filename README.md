@@ -27,7 +27,7 @@ into a runnable server binary using that language's own toolchain.
 | Language | Status |
 |---|---|
 | C# (.NET) | ✅ Fully supported — scan, emit, and publish all work today |
-| Go | 🚧 Toolchain wired, scanner not yet implemented |
+| Go | ✅ Fully supported — scan, emit, and publish all work today |
 | Python | 🚧 Toolchain wired, scanner not yet implemented |
 | Rust | 🚧 Toolchain wired, scanner not yet implemented |
 | Ruby | 🚧 Toolchain wired, scanner not yet implemented (stdio transport only) |
@@ -37,20 +37,19 @@ language, including what's planned for the ones still in progress.
 
 ## Installation
 
-`x2mcp` is a .NET project — it's not published as a packaged CLI tool yet, so for
-now this is how you run it. (This section will be updated once it ships as an
-installable tool.)
+`x2mcp` is published as a [.NET global tool](https://learn.microsoft.com/dotnet/core/tools/global-tools).
 
-Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download) or later.
+Prerequisite: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later.
 
 ```bash
-git clone https://github.com/Syntechtix/mcpify.git
-cd x2mcp
-dotnet build
+dotnet tool install --global x2mcp
 ```
 
-Run it via `dotnet run --project src/X2Mcp.Cli`, or invoke the built `x2mcp`
-executable directly from `src/X2Mcp.Cli/bin/Debug/net10.0/`.
+Upgrade to the latest version at any time with:
+
+```bash
+dotnet tool update --global x2mcp
+```
 
 ## CLI syntax
 
@@ -86,7 +85,7 @@ project, the exact command, and the generated wrapper output — live in
 [docs/examples](docs/examples/README.md):
 
 - [C#](docs/examples/csharp.md) — fully working today
+- [Go](docs/examples/go.md) — fully working today
 - [Python](docs/examples/python.md) — planned
-- [Go](docs/examples/go.md) — planned
 - [Rust](docs/examples/rust.md) — planned
 - [Ruby](docs/examples/ruby.md) — planned (stdio transport only)

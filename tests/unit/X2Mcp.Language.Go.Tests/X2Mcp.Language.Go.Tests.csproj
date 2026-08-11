@@ -18,8 +18,8 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Exclude fixture .go files from compilation — they are test data for GoScanner -->
-    <Compile Remove="PublicFunctions.go;unexported.go;methods.go;sample_test.go" />
-    <Content Include="PublicFunctions.go;unexported.go;methods.go;sample_test.go">
+    <Compile Remove="Fixtures/PublicFunctions.go;Fixtures/unexported.go;Fixtures/methods.go;Fixtures/sample_test.go" />
+    <Content Include="Fixtures/PublicFunctions.go;Fixtures/unexported.go;Fixtures/methods.go;Fixtures/sample_test.go">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

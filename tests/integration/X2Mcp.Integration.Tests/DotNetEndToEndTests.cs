@@ -27,7 +27,7 @@ public class DotNetEndToEndTests : IDisposable
             Directory.Delete(_tempDir, recursive: true);
     }
 
-    [Fact(Skip = "Requires dotnet on PATH and NuGet network access. Remove Skip to run manually.")]
+    [Fact]
     public async Task WrapSampleLib_Stdio_ProducesExecutable()
     {
         var outputDir = Path.Combine(_tempDir, "output");

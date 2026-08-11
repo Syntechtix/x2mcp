@@ -5,7 +5,7 @@ namespace X2Mcp.Language.DotNet.Tests;
 public class RoslynScannerTests
 {
     private static string Fixture(string name) =>
-        Path.Combine(AppContext.BaseDirectory, name);
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
 
     [Fact]
     public void Scan_PublicClassWithPublicMethods_ReturnsTypes()
@@ -96,5 +96,13 @@ public class RoslynScannerTests
         var path = Fixture("PublicMethods.cs");
         var surface = new RoslynScanner().Scan(path);
         Assert.Equal(path, surface.SourcePath);
+    }
+
+    [Fact]
+    public void Scan_ClassInsideBlockScopedNamespace_ResolvesNamespace()
+    {
+        var surface = new RoslynScanner().Scan(Fixture("BlockNamespace.cs"));
+        var type = surface.Types.Single(t => t.Name == "BlockScoped");
+        Assert.Equal("Fixtures.Block", type.Namespace);
     }
 }

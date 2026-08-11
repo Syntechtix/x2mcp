@@ -27,7 +27,7 @@ public class GoEndToEndTests : IDisposable
             Directory.Delete(_tempDir, recursive: true);
     }
 
-    [Fact(Skip = "Requires go on PATH and network access. Remove Skip to run manually.")]
+    [Fact]
     public async Task WrapSampleGoLib_Stdio_ProducesExecutable()
     {
         var outputDir = Path.Combine(_tempDir, "output");

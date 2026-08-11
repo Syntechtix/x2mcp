@@ -18,8 +18,8 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Exclude fixture .cs files from compilation — they are test data for RoslynScanner -->
-    <Compile Remove="PublicMethods.cs;InternalClass.cs;PrivateMethods.cs" />
-    <Content Include="PublicMethods.cs;InternalClass.cs;PrivateMethods.cs">
+    <Compile Remove="Fixtures/PublicMethods.cs;Fixtures/InternalClass.cs;Fixtures/PrivateMethods.cs;Fixtures/BlockNamespace.cs" />
+    <Content Include="Fixtures/PublicMethods.cs;Fixtures/InternalClass.cs;Fixtures/PrivateMethods.cs;Fixtures/BlockNamespace.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

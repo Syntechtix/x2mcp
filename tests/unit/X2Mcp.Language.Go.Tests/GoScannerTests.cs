@@ -5,7 +5,7 @@ namespace X2Mcp.Language.Go.Tests;
 public class GoScannerTests
 {
     private static string Fixture(string name) =>
-        Path.Combine(AppContext.BaseDirectory, name);
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
 
     [Fact]
     public void Scan_PublicFunctions_ReturnsGoLanguage()

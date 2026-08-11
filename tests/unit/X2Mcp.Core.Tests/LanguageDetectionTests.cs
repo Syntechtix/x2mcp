@@ -51,6 +51,22 @@ public class LanguageDetectionTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_NonExistentSourcePath_ThrowsWithEmptyExtensions()
+    {
+        var missingPath = Path.Combine(_tempDir, "does-not-exist");
+        var engine = new OrchestrationEngine(
+            [new StubLanguageModule(".cs")],
+            new FakeProcessRunner(),
+            generatedProjectsRoot: Path.Combine(_tempDir, "gen"));
+
+        var ex = await Assert.ThrowsAsync<NoLanguageModuleException>(
+            () => engine.RunAsync(missingPath, Path.Combine(_tempDir, "out"), "T", Transport.Stdio));
+
+        Assert.Empty(ex.DetectedExtensions);
+        Assert.Equal(missingPath, ex.SourcePath);
+    }
+
+    [Fact]
     public async Task RunAsync_MatchingExtension_SelectsCorrectModule()
     {
         File.WriteAllText(Path.Combine(_tempDir, "foo.py"), "content");
