@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>SampleLib</AssemblyName>
-    <RootNamespace>SampleLib</RootNamespace>
+    <AssemblyName>DotNetSampleLib</AssemblyName>
+    <RootNamespace>DotNetSampleLib</RootNamespace>
   </PropertyGroup>
 </Project>

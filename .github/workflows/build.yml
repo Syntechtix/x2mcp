@@ -15,27 +15,34 @@ env:
 jobs:
   build-and-unit-test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
       - run: dotnet restore X2Mcp.slnx
       - run: dotnet format X2Mcp.slnx --verify-no-changes
       - run: dotnet build X2Mcp.slnx --no-restore -c Release
+
       - run: >
           dotnet test X2Mcp.slnx --no-build -c Release --filter "Category!=Integration"
           --collect:"XPlat Code Coverage" --results-directory ./coverage
+
       - name: Install reportgenerator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
       - name: Generate coverage report
         run: >
           reportgenerator -reports:"coverage/**/coverage.cobertura.xml"
           -targetdir:coveragereport
           -reporttypes:"MarkdownSummaryGithub;Cobertura"
           -classfilters:"-System.Text.RegularExpressions.Generated*"
+
       - name: Publish coverage summary
         run: cat coveragereport/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Enforce 100% line coverage
         run: |
           coverage=$(grep -oP '(?<=<coverage line-rate=")[^"]+' coveragereport/Cobertura.xml | head -1)
@@ -50,25 +57,30 @@ jobs:
   integration-dotnet:
     needs: build-and-unit-test
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
       - run: dotnet restore X2Mcp.slnx
       - run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~DotNetEndToEndTests"
 
   integration-go:
     needs: build-and-unit-test
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
       - uses: actions/setup-go@v5
         with:
           go-version: "stable"
+
       - run: dotnet restore X2Mcp.slnx
       - run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~GoEndToEndTests"
 
@@ -76,21 +88,24 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       contains(github.event.head_commit.modified, 'tests/unit/X2Mcp.Language.Go.Tests') ||
-      contains(github.event.head_commit.modified, 'tests/integration/X2Mcp.Integration.Tests/Fixtures/SampleGoLib')
+      contains(github.event.head_commit.modified, 'tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib')
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: "stable"
-      - run: gofmt -l -d tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/SampleGoLib
+
+      - run: gofmt -l -d tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib
       - name: Fail on unformatted files
         run: |
-          test -z "$(gofmt -l tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/SampleGoLib)"
+          test -z "$(gofmt -l tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Tests/Fixtures/GoSampleLib)"
 
   all-checks-passed:
     needs: [build-and-unit-test, integration-dotnet, integration-go]
     if: always()
     runs-on: ubuntu-latest
+    
     steps:
       - run: |
           if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then

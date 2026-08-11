@@ -1,3 +1,3 @@
-module example.com/samplegolib
+module example.com/gosamplelib
 
 go 1.23

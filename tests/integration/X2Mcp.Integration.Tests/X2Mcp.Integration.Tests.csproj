@@ -16,7 +16,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <!-- SampleLib is fixture source — copy to output but do not compile into this project -->
+    <!-- DotNetSampleLib/GoSampleLib are fixture sources — copy to output but do not compile into this project -->
     <Compile Remove="Fixtures/**/*.cs" />
     <Content Include="Fixtures/**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -17,7 +17,7 @@ public class DotNetEndToEndTests : IDisposable
         Path.Combine(Path.GetTempPath(), $"x2mcp-e2e-{Guid.NewGuid():N}");
 
     private static readonly string FixturesDir =
-        Path.Combine(AppContext.BaseDirectory, "Fixtures", "SampleLib");
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", "DotNetSampleLib");
 
     public DotNetEndToEndTests() => Directory.CreateDirectory(_tempDir);
 
@@ -28,7 +28,7 @@ public class DotNetEndToEndTests : IDisposable
     }
 
     [Fact]
-    public async Task WrapSampleLib_Stdio_ProducesExecutable()
+    public async Task WrapDotNetSampleLib_Stdio_ProducesExecutable()
     {
         var outputDir = Path.Combine(_tempDir, "output");
         var genRoot = Path.Combine(_tempDir, "gen");
@@ -41,13 +41,13 @@ public class DotNetEndToEndTests : IDisposable
         var result = await engine.RunAsync(
             FixturesDir,
             outputDir,
-            "SampleLib",
+            "DotNetSampleLib",
             Transport.Stdio);
 
         Assert.True(result.Success, $"Build failed: {result.Error}");
         Assert.True(Directory.Exists(outputDir), "Output directory was not created.");
 
-        var binaryName = OperatingSystem.IsWindows() ? "SampleLib.exe" : "SampleLib";
+        var binaryName = OperatingSystem.IsWindows() ? "DotNetSampleLib.exe" : "DotNetSampleLib";
         Assert.True(
             File.Exists(Path.Combine(outputDir, binaryName)),
             $"Binary not found at {Path.Combine(outputDir, binaryName)}");

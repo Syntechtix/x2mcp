@@ -17,7 +17,7 @@ public class GoEndToEndTests : IDisposable
         Path.Combine(Path.GetTempPath(), $"x2mcp-go-e2e-{Guid.NewGuid():N}");
 
     private static readonly string FixturesDir =
-        Path.Combine(AppContext.BaseDirectory, "Fixtures", "SampleGoLib");
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", "GoSampleLib");
 
     public GoEndToEndTests() => Directory.CreateDirectory(_tempDir);
 
@@ -28,7 +28,7 @@ public class GoEndToEndTests : IDisposable
     }
 
     [Fact]
-    public async Task WrapSampleGoLib_Stdio_ProducesExecutable()
+    public async Task WrapGoSampleLib_Stdio_ProducesExecutable()
     {
         var outputDir = Path.Combine(_tempDir, "output");
         var genRoot = Path.Combine(_tempDir, "gen");
@@ -41,13 +41,13 @@ public class GoEndToEndTests : IDisposable
         var result = await engine.RunAsync(
             FixturesDir,
             outputDir,
-            "SampleGoLib",
+            "GoSampleLib",
             Transport.Stdio);
 
         Assert.True(result.Success, $"Build failed: {result.Error}");
         Assert.True(Directory.Exists(outputDir), "Output directory was not created.");
 
-        var binaryName = OperatingSystem.IsWindows() ? "SampleGoLib.exe" : "SampleGoLib";
+        var binaryName = OperatingSystem.IsWindows() ? "GoSampleLib.exe" : "GoSampleLib";
         Assert.True(
             File.Exists(Path.Combine(outputDir, binaryName)),
             $"Binary not found at {Path.Combine(outputDir, binaryName)}");

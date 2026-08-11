@@ -2,6 +2,10 @@
 
 Guidance for coding agents working in this repository.
 
+## Git
+
+- Never run `git commit` (or `git push`) — the user commits everything themselves, manually, always. Staging changes (`git add`) or inspecting status/diffs is fine; committing is not.
+
 ## Stack
 
 - C# 10, .NET 10 (`net10.0`), solution file is `X2Mcp.slnx` (not a `.sln`).

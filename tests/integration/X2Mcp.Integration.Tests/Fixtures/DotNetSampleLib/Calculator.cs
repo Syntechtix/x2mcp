@@ -1,4 +1,4 @@
-namespace SampleLib;
+namespace DotNetSampleLib;
 
 public class Calculator
 {
