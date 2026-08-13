@@ -17,7 +17,8 @@ public partial class GoScanner : IScanner
     public ScannedSurface Scan(string sourcePath)
     {
         var files = ResolveGoFiles(sourcePath);
-        var typesByPackage = new Dictionary<string, List<FunctionDescriptor>>();
+        var packageFunctions = new Dictionary<string, List<FunctionDescriptor>>();
+        var methodsByReceiver = new Dictionary<(string Package, string Receiver), List<FunctionDescriptor>>();
 
         foreach (var file in files)
         {
@@ -26,8 +27,8 @@ public partial class GoScanner : IScanner
             if (!packageMatch.Success) continue;
 
             var packageName = packageMatch.Groups["name"].Value;
-            if (!typesByPackage.TryGetValue(packageName, out var functions))
-                typesByPackage[packageName] = functions = [];
+            if (!packageFunctions.TryGetValue(packageName, out var functions))
+                packageFunctions[packageName] = functions = [];
 
             foreach (Match funcMatch in FunctionRegex().Matches(text))
             {
@@ -39,11 +40,39 @@ public partial class GoScanner : IScanner
 
                 functions.Add(new FunctionDescriptor(name, parameters, returnType, false));
             }
+
+            foreach (Match methodMatch in MethodRegex().Matches(text))
+            {
+                var name = methodMatch.Groups["name"].Value;
+                if (!IsExported(name)) continue;
+
+                var receiverType = ExtractReceiverType(methodMatch.Groups["recv"].Value);
+                if (receiverType is null || !IsExported(receiverType))
+                    continue;
+
+                var key = (packageName, receiverType);
+                if (!methodsByReceiver.TryGetValue(key, out var methods))
+                    methodsByReceiver[key] = methods = [];
+
+                var parameters = ParseParameters(methodMatch.Groups["params"].Value);
+                var returnType = methodMatch.Groups["ret"].Value.Trim();
+                methods.Add(new FunctionDescriptor(name, parameters, returnType, false));
+            }
         }
 
-        var types = typesByPackage
-            .Select(kvp => new TypeDescriptor("", kvp.Key, kvp.Value))
-            .ToList();
+        var types = new List<TypeDescriptor>();
+
+        foreach (var kvp in packageFunctions)
+        {
+            if (kvp.Value.Count > 0)
+                types.Add(new TypeDescriptor("", kvp.Key, kvp.Value));
+        }
+
+        foreach (var kvp in methodsByReceiver)
+        {
+            if (kvp.Value.Count > 0)
+                types.Add(new TypeDescriptor(kvp.Key.Package, kvp.Key.Receiver, kvp.Value));
+        }
 
         return new ScannedSurface(sourcePath, "go", types);
     }
@@ -64,6 +93,23 @@ public partial class GoScanner : IScanner
 
     private static bool IsExported(string name) =>
         name.Length > 0 && char.IsUpper(name[0]);
+
+    private static string? ExtractReceiverType(string receiverRaw)
+    {
+        var receiver = receiverRaw.Trim();
+        if (receiver.Length == 0)
+            return null;
+
+        var parts = receiver.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var typeToken = parts[^1].Trim();
+        typeToken = typeToken.TrimStart('*');
+
+        var genericStart = typeToken.IndexOf('[');
+        if (genericStart >= 0)
+            typeToken = typeToken[..genericStart];
+
+        return typeToken.Length == 0 ? null : typeToken;
+    }
 
     private static IReadOnlyList<ParameterDescriptor> ParseParameters(string paramList)
     {
@@ -99,4 +145,7 @@ public partial class GoScanner : IScanner
 
     [GeneratedRegex(@"^func (?!\()(?<name>[A-Za-z_]\w*)\s*\((?<params>[^)]*)\)\s*(?<ret>[^{]*)\{", RegexOptions.Multiline)]
     private static partial Regex FunctionRegex();
+
+    [GeneratedRegex(@"^func\s*\((?<recv>[^)]*)\)\s*(?<name>[A-Za-z_]\w*)\s*\((?<params>[^)]*)\)\s*(?<ret>[^{]*)\{", RegexOptions.Multiline)]
+    private static partial Regex MethodRegex();
 }

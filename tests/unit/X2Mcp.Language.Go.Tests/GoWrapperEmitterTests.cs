@@ -223,7 +223,7 @@ public class GoWrapperEmitterTests : IDisposable
         var mainGo = new GoWrapperEmitter().Emit(surface, context)
             .Files.Single(f => f.RelativePath == "main.go").Content;
 
-        Assert.Contains("type AddArgs struct {", mainGo);
+        Assert.Contains("type pkgAddArgs struct {", mainGo);
         Assert.Contains("A int `json:\"a\"`", mainGo);
         Assert.Contains("B int `json:\"b\"`", mainGo);
     }
@@ -285,6 +285,65 @@ public class GoWrapperEmitterTests : IDisposable
 
         Assert.Contains("Name: \"Add\"", mainGo);
         Assert.Contains("Name: \"Greet\"", mainGo);
+    }
+
+    [Fact]
+    public void Emit_ReceiverMethods_GeneratesReceiverInstanceAndMethodCalls()
+    {
+        var sourceDir = MakeSourceModule();
+        var surface = MakeSurface(new TypeDescriptor("fixtures", "Calculator", [
+            new FunctionDescriptor("Add", [
+                new ParameterDescriptor("a", "int", false),
+                new ParameterDescriptor("b", "int", false),
+            ], "int", false),
+        ]));
+        var context = MakeContext(sourceDir);
+
+        var mainGo = new GoWrapperEmitter().Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "main.go").Content;
+
+        Assert.Contains("receiver0_Calculator := new(srcpkg.Calculator)", mainGo);
+        Assert.Contains("result := receiver0_Calculator.Add(args.A, args.B)", mainGo);
+        Assert.Contains("Name: \"Calculator_Add\"", mainGo);
+    }
+
+    [Fact]
+    public void Emit_MethodAndTopLevelSameName_UsesDistinctArgsTypes()
+    {
+        var sourceDir = MakeSourceModule();
+        var surface = MakeSurface(
+            new TypeDescriptor("", "fixtures", [
+                new FunctionDescriptor("Add", [new ParameterDescriptor("a", "int", false)], "int", false),
+            ]),
+            new TypeDescriptor("fixtures", "Calculator", [
+                new FunctionDescriptor("Add", [new ParameterDescriptor("a", "int", false)], "int", false),
+            ]));
+        var context = MakeContext(sourceDir);
+
+        var mainGo = new GoWrapperEmitter().Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "main.go").Content;
+
+        Assert.Contains("type pkgAddArgs struct {", mainGo);
+        Assert.Contains("type CalculatorAddArgs struct {", mainGo);
+        Assert.Contains("Name: \"Add\"", mainGo);
+        Assert.Contains("Name: \"Calculator_Add\"", mainGo);
+    }
+
+    [Fact]
+    public void Emit_MethodWithUnderscoreReceiver_CoversIdentifierSanitization()
+    {
+        var sourceDir = MakeSourceModule();
+        var surface = MakeSurface(new TypeDescriptor("fixtures", "Calculator_V2", [
+            new FunctionDescriptor("Add", [new ParameterDescriptor("a", "int", false)], "int", false),
+        ]));
+        var context = MakeContext(sourceDir);
+
+        var mainGo = new GoWrapperEmitter().Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "main.go").Content;
+
+        Assert.Contains("type Calculator_V2AddArgs struct {", mainGo);
+        Assert.Contains("receiver0_Calculator_V2 := new(srcpkg.Calculator_V2)", mainGo);
+        Assert.Contains("Name: \"Calculator_V2_Add\"", mainGo);
     }
 
     [Fact]

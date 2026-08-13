@@ -1,43 +1,75 @@
-# Example: wrapping a Python script (coming soon)
-
-> **Status:** The Python toolchain is registered (`python`, `pyinstaller`), but
-> `PythonScanner` doesn't parse source yet — running `x2mcp` against a `.py` file
-> today throws `NotImplementedException`. This doc describes the intended flow.
+# Example: wrapping a Python module
 
 ## Prerequisites
 
-- Python 3 and [PyInstaller](https://pyinstaller.org/) — `python` and
-  `pyinstaller` must both be on your `PATH` so `x2mcp` can freeze the generated
-  wrapper into a single executable. No minimum Python version is pinned yet.
+- Python 3 and [PyInstaller](https://pyinstaller.org/) on your `PATH`.
+- The Python MCP SDK:
 
-## 1. The source file
+```bash
+python -m pip install mcp
+```
+
+## 1. The source module
 
 ```python
 # calculator.py
-class Calculator:
-    def add(self, a: int, b: int) -> int:
-        return a + b
+def add(a: int, b: int) -> int:
+  return a + b
 
-    def subtract(self, a: int, b: int) -> int:
-        return a - b
+
+def greet(name: str) -> str:
+  return f"Hello, {name}"
+
+
+class Calculator:
+  def multiply(self, a: int, b: int) -> int:
+    return a * b
+
+  async def echo(self, value: str) -> str:
+    return value
 ```
 
-## 2. Planned invocation
+## 2. Run x2mcp
 
 ```bash
 x2mcp ./calculator.py --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
-## 3. Planned toolchain
+## 3. What gets generated
 
-Once the scanner is implemented, `x2mcp` will emit a wrapper `main.py` that exposes
-each public method as an MCP tool, then freeze it into a single executable with:
+`x2mcp` emits a `main.py` wrapper plus the source `.py` files the wrapper imports.
+The wrapper uses FastMCP and registers top-level functions and class methods as tools.
 
-```bash
-pyinstaller --onefile --distpath ./dist/calculator-mcp <generated-project>/main.py
+```python
+from mcp.server.fastmcp import FastMCP
+import calculator
+
+mcp = FastMCP("calculator")
+
+mcp.tool(name="add")(calculator.add)
+mcp.tool(name="greet")(calculator.greet)
+_calculator_Calculator = calculator.Calculator()
+mcp.tool(name="multiply")(_calculator_Calculator.multiply)
+mcp.tool(name="echo")(_calculator_Calculator.echo)
+
+if __name__ == "__main__":
+  mcp.run(transport="stdio")
 ```
 
-Required executables: `python`, `pyinstaller`.
-Supported transports: `stdio`, `http`.
+## 4. Build
 
-Follow [csharp.md](csharp.md) for a full working walkthrough in the meantime.
+`x2mcp` resolves the toolchain executable from `requiredExecutables`
+(`pyinstaller`) and then runs the publish args:
+
+```bash
+pyinstaller --onefile --name calculator --distpath ./dist/calculator-mcp <generated-project>/main.py
+```
+
+## 5. `--transport http`
+
+Passing `--transport http` switches the entrypoint to streamable HTTP:
+
+```python
+if __name__ == "__main__":
+  mcp.run(transport="streamable-http")
+```

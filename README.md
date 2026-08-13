@@ -28,7 +28,7 @@ builds it into a runnable server binary using that language's own toolchain.
 |---|---|
 | C# (.NET) | ✅ Fully supported — scan, emit, and publish all work today |
 | Go | ✅ Fully supported — scan, emit, and publish all work today |
-| Python | 🚧 Toolchain wired, scanner not yet implemented |
+| Python | ✅ Fully supported — scan, emit, and publish all work today |
 | Rust | 🚧 Toolchain wired, scanner not yet implemented |
 | Ruby | 🚧 Toolchain wired, scanner not yet implemented (stdio transport only) |
 
@@ -86,6 +86,6 @@ project, the exact command, and the generated wrapper output — live in
 
 - [C#](docs/examples/csharp.md) — fully working today
 - [Go](docs/examples/go.md) — fully working today
-- [Python](docs/examples/python.md) — planned
+- [Python](docs/examples/python.md) — fully working today
 - [Rust](docs/examples/rust.md) — planned
 - [Ruby](docs/examples/ruby.md) — planned (stdio transport only)

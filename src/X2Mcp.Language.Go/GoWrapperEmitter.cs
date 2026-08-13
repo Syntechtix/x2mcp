@@ -96,16 +96,42 @@ public class GoWrapperEmitter : IWrapperEmitter
     {
         var structs = new StringBuilder();
         var registrations = new StringBuilder();
+        var instances = new StringBuilder();
+        var receiverInstanceNames = new Dictionary<(string PackageName, string ReceiverName), string>();
 
         foreach (var type in surface.Types)
         {
             foreach (var func in type.Functions)
             {
+                var isMethod = type.Namespace.Length > 0;
+                var ownerName = isMethod ? type.Name : "pkg";
+                var argsTypeName = BuildArgsTypeName(ownerName, func.Name);
+                var toolName = BuildToolName(ownerName, func.Name, isMethod);
+
+                string call;
+                if (isMethod)
+                {
+                    var key = (type.Namespace, type.Name);
+                    if (!receiverInstanceNames.TryGetValue(key, out var instanceName))
+                    {
+                        instanceName = BuildInstanceName(type.Name, receiverInstanceNames.Count);
+                        receiverInstanceNames[key] = instanceName;
+                        if (instances.Length > 0) instances.AppendLine();
+                        instances.Append($"\t{instanceName} := new(srcpkg.{type.Name})");
+                    }
+
+                    call = BuildCallExpression($"{instanceName}.{func.Name}", func);
+                }
+                else
+                {
+                    call = BuildCallExpression($"srcpkg.{func.Name}", func);
+                }
+
                 if (structs.Length > 0) structs.AppendLine();
-                structs.Append(GenerateArgsStruct(func));
+                structs.Append(GenerateArgsStruct(argsTypeName, func));
 
                 if (registrations.Length > 0) registrations.AppendLine();
-                registrations.Append(GenerateRegistration(func));
+                registrations.Append(GenerateRegistration(func, argsTypeName, toolName, call));
             }
         }
 
@@ -139,13 +165,14 @@ public class GoWrapperEmitter : IWrapperEmitter
             func main() {
             	server := mcp.NewServer(&mcp.Implementation{Name: "{{context.ServerName}}", Version: "1.0.0"}, nil)
 
+                {{instances}}
             {{registrations}}
             {{runBlock}}
             }
             """;
     }
 
-    private static string GenerateArgsStruct(FunctionDescriptor func)
+    private static string GenerateArgsStruct(string argsTypeName, FunctionDescriptor func)
     {
         var fields = new StringBuilder();
         foreach (var param in func.Parameters)
@@ -155,18 +182,18 @@ public class GoWrapperEmitter : IWrapperEmitter
         }
 
         return $$"""
-            type {{func.Name}}Args struct {
+            type {{argsTypeName}} struct {
             {{fields}}}
             """;
     }
 
-    private static string GenerateRegistration(FunctionDescriptor func)
+    private static string GenerateRegistration(
+        FunctionDescriptor func,
+        string argsTypeName,
+        string toolName,
+        string call)
     {
         var shape = ParseReturnShape(func.ReturnType);
-        var argList = string.Join(", ", func.Parameters.Select(p =>
-            $"args.{char.ToUpperInvariant(p.Name[0])}{p.Name[1..]}"));
-        var call = $"srcpkg.{func.Name}({argList})";
-
         var body = shape switch
         {
             ReturnShape.None => $"{call}\n\t\treturn nil, nil, nil",
@@ -177,10 +204,38 @@ public class GoWrapperEmitter : IWrapperEmitter
         };
 
         return $$"""
-            	mcp.AddTool(server, &mcp.Tool{Name: "{{func.Name}}"}, func(ctx context.Context, req *mcp.CallToolRequest, args {{func.Name}}Args) (*mcp.CallToolResult, any, error) {
+            	mcp.AddTool(server, &mcp.Tool{Name: "{{toolName}}"}, func(ctx context.Context, req *mcp.CallToolRequest, args {{argsTypeName}}) (*mcp.CallToolResult, any, error) {
             		{{body}}
             	})
             """;
+    }
+
+    private static string BuildCallExpression(string callableName, FunctionDescriptor func)
+    {
+        var argList = string.Join(", ", func.Parameters.Select(p =>
+            $"args.{char.ToUpperInvariant(p.Name[0])}{p.Name[1..]}"));
+        return $"{callableName}({argList})";
+    }
+
+    private static string BuildArgsTypeName(string ownerName, string functionName) =>
+        $"{SanitizeIdentifier(ownerName)}{functionName}Args";
+
+    private static string BuildToolName(string ownerName, string functionName, bool isMethod) =>
+        isMethod ? $"{ownerName}_{functionName}" : functionName;
+
+    private static string BuildInstanceName(string receiverTypeName, int index) =>
+        $"receiver{index}_{SanitizeIdentifier(receiverTypeName)}";
+
+    private static string SanitizeIdentifier(string value)
+    {
+        var chars = value.ToCharArray();
+        for (var i = 0; i < chars.Length; i++)
+        {
+            if (!char.IsLetterOrDigit(chars[i]))
+                chars[i] = '_';
+        }
+
+        return new string(chars);
     }
 
     private static ReturnShape ParseReturnShape(string rawReturnType)
