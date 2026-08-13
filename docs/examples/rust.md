@@ -42,3 +42,18 @@ Required executables: `cargo`.
 Supported transports: `stdio`, `http`.
 
 Follow [csharp.md](csharp.md) for a full working walkthrough in the meantime.
+
+## 5. Connect to an MCP client (preview)
+
+Once Rust support ships, the integration steps will mirror the C# example exactly:
+
+- **Claude Desktop** — `claude_desktop_config.json` with `"command"` pointing at the
+  compiled binary.
+- **ChatGPT Codex** — `~/.codex/config.toml` with a `[[mcp_servers]]` entry.
+- **VS Code** — `.vscode/mcp.json` with `"type": "stdio"` and
+  `"command": "${workspaceFolder}/dist/calculator-mcp/calculator"`.
+- **Visual Studio 2022** — same `.vscode/mcp.json` file at the solution root; requires
+  17.14 or later.
+
+See [csharp.md § 6](csharp.md#6-connect-to-an-mcp-client) for the full config
+snippets.

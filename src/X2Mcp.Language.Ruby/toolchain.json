@@ -1,7 +1,7 @@
 {
   "requiredExecutables": ["ruby", "bundle"],
-  "buildCommand": "exec ruby {GeneratedProjectPath}/server.rb",
-  "publishCommand": "exec ruby {GeneratedProjectPath}/server.rb",
+  "buildCommand": "{GeneratedProjectPath}/build.rb {OutputPath} {ServerName}",
+  "publishCommand": "{GeneratedProjectPath}/build.rb {OutputPath} {ServerName}",
   "supportedTransports": ["Stdio"],
   "sourceExtensions": [".rb"]
 }

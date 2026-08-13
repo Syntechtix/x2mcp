@@ -24,16 +24,16 @@ builds it into a runnable server binary using that language's own toolchain.
 
 ## Supported languages
 
-| Language | Status |
-|---|---|
-| C# (.NET) | ✅ Fully supported — scan, emit, and publish all work today |
-| Go | ✅ Fully supported — scan, emit, and publish all work today |
-| Python | ✅ Fully supported — scan, emit, and publish all work today |
-| Rust | 🚧 Toolchain wired, scanner not yet implemented |
-| Ruby | 🚧 Toolchain wired, scanner not yet implemented (stdio transport only) |
+| Language | Transports | Example |
+|---|---|---|
+| C# (.NET) | stdio, http | [docs/examples/csharp.md](docs/examples/csharp.md) |
+| Go | stdio, http | [docs/examples/go.md](docs/examples/go.md) |
+| Python | stdio, http | [docs/examples/python.md](docs/examples/python.md) |
+| Ruby | stdio | [docs/examples/ruby.md](docs/examples/ruby.md) |
 
-See [docs/examples](docs/examples/README.md) for a full walkthrough of every
-language, including what's planned for the ones still in progress.
+## Coming soon
+
+- Rust
 
 ## Installation
 
@@ -78,14 +78,3 @@ Creating stdio server...
 Done. MCP server written to: ./dist/calculator-mcp
 ```
 
-## Examples
-
-Full walkthroughs for every supported (and planned) language — including the source
-project, the exact command, and the generated wrapper output — live in
-[docs/examples](docs/examples/README.md):
-
-- [C#](docs/examples/csharp.md) — fully working today
-- [Go](docs/examples/go.md) — fully working today
-- [Python](docs/examples/python.md) — fully working today
-- [Rust](docs/examples/rust.md) — planned
-- [Ruby](docs/examples/ruby.md) — planned (stdio transport only)

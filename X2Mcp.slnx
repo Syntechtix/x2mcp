@@ -13,11 +13,13 @@
     <Project Path="tests/integration/X2Mcp.Integration.DotNet.Tests/X2Mcp.Integration.DotNet.Tests.csproj" />
     <Project Path="tests/integration/X2Mcp.Integration.Go.Tests/X2Mcp.Integration.Go.Tests.csproj" />
     <Project Path="tests/integration/X2Mcp.Integration.Python.Tests/X2Mcp.Integration.Python.Tests.csproj" />
+    <Project Path="tests/integration/X2Mcp.Integration.Ruby.Tests/X2Mcp.Integration.Ruby.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/unit/">
     <Project Path="tests/unit/X2Mcp.Core.Tests/X2Mcp.Core.Tests.csproj" />
     <Project Path="tests/unit/X2Mcp.Language.DotNet.Tests/X2Mcp.Language.DotNet.Tests.csproj" />
     <Project Path="tests/unit/X2Mcp.Language.Go.Tests/X2Mcp.Language.Go.Tests.csproj" />
     <Project Path="tests/unit/X2Mcp.Language.Python.Tests/X2Mcp.Language.Python.Tests.csproj" />
+    <Project Path="tests/unit/X2Mcp.Language.Ruby.Tests/X2Mcp.Language.Ruby.Tests.csproj" />
   </Folder>
 </Solution>

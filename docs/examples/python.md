@@ -73,3 +73,140 @@ Passing `--transport http` switches the entrypoint to streamable HTTP:
 if __name__ == "__main__":
   mcp.run(transport="streamable-http")
 ```
+
+## 6. Connect to an MCP client
+
+Once `./dist/calculator-mcp/` exists, register the server in any MCP client.
+
+> **Absolute paths required.** MCP clients launch the binary as a subprocess; relative
+> paths won't resolve. Replace the placeholder paths below with the real absolute path
+> on your machine.
+
+### Starting the HTTP server
+
+If you built with `--transport http`, start the binary before configuring any client:
+
+```bash
+./dist/calculator-mcp/calculator
+```
+
+FastMCP listens on `http://localhost:8000` by default. Use `http://localhost:8000/mcp`
+in the HTTP configs below.
+
+### Claude Desktop
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
+`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+**stdio:**
+
+```json
+{
+  "mcpServers": {
+    "calculator": {
+      "command": "/absolute/path/to/dist/calculator-mcp/calculator",
+      "args": []
+    }
+  }
+}
+```
+
+On Windows the PyInstaller binary is `calculator.exe`. Restart Claude after saving.
+
+**HTTP:**
+
+```json
+{
+  "mcpServers": {
+    "calculator": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
+
+### ChatGPT Codex
+
+Edit `~/.codex/config.toml`:
+
+**stdio:**
+
+```toml
+[[mcp_servers]]
+name = "calculator"
+cmd = ["/absolute/path/to/dist/calculator-mcp/calculator"]
+```
+
+**HTTP:**
+
+```toml
+[[mcp_servers]]
+name = "calculator"
+url = "http://localhost:8000/mcp"
+```
+
+### VS Code
+
+Create or edit `.vscode/mcp.json` in your workspace root:
+
+**stdio:**
+
+```json
+{
+  "servers": {
+    "calculator": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/dist/calculator-mcp/calculator"
+    }
+  }
+}
+```
+
+The file is picked up automatically — no restart needed. Switch to **Agent mode** and
+the calculator tools are available immediately.
+
+**HTTP:**
+
+```json
+{
+  "servers": {
+    "calculator": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
+
+### Visual Studio 2022
+
+Visual Studio 2022 17.14+ reads the same `.vscode/mcp.json` format. Create the file
+at the solution root (next to your `.sln` / `.slnx`):
+
+**stdio:**
+
+```json
+{
+  "servers": {
+    "calculator": {
+      "type": "stdio",
+      "command": "C:/absolute/path/to/dist/calculator-mcp/calculator.exe"
+    }
+  }
+}
+```
+
+Restart Visual Studio after creating or modifying the file. Tools appear in Agent mode.
+
+**HTTP:**
+
+```json
+{
+  "servers": {
+    "calculator": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
