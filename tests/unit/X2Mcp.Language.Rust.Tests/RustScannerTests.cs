@@ -233,4 +233,42 @@ public class RustScannerTests
 
         Assert.True(surface.Types.Single().Functions.Single().IsAsync);
     }
+
+    [Fact]
+    public void Scan_ModRsFile_StripsModSuffixFromModulePath()
+    {
+        var fileSystem = Substitute.For<IFileSystem>();
+        fileSystem.DirectoryExists("/crate").Returns(true);
+        fileSystem.GetFiles("/crate", "*.rs", SearchOption.AllDirectories).Returns(["/crate/src/foo/mod.rs"]);
+        fileSystem.ReadAllText("/crate/src/foo/mod.rs").Returns("pub fn baz() {}\n");
+
+        var surface = new RustScanner(fileSystem).Scan("/crate");
+
+        Assert.Single(surface.Types);
+        Assert.Equal("foo", surface.Types[0].Namespace);
+    }
+
+    [Fact]
+    public void Scan_ImplBlockWithUnbalancedBraces_SkipsSpanInsteadOfThrowing()
+    {
+        // Regression: an impl block whose closing brace is missing must not associate its
+        // methods with the struct — FindMatchingBrace returns -1 and the span is skipped.
+        var fileSystem = Substitute.For<IFileSystem>();
+        var sourcePath = "input.rs";
+        fileSystem.FileExists(sourcePath).Returns(true);
+        fileSystem.ReadAllText(sourcePath).Returns(
+            """
+            pub struct Widget;
+
+            impl Widget {
+                pub fn method(&self, n: i32) -> i32 { n }
+            """);
+
+        var surface = new RustScanner(fileSystem).Scan(sourcePath);
+
+        Assert.Single(surface.Types);
+        Assert.Equal("functions", surface.Types[0].Name);
+        Assert.Single(surface.Types[0].Functions);
+        Assert.Equal("method", surface.Types[0].Functions[0].Name);
+    }
 }

@@ -206,6 +206,24 @@ public class PythonScannerTests
     }
 
     [Fact]
+    public void Scan_Directory_PackageInitFile_StripsDunderInitFromModuleName()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src").Returns(false);
+        fs.DirectoryExists("/src").Returns(true);
+        fs.GetFiles("/src", "*.py", SearchOption.AllDirectories).Returns([
+            "/src/pkg/__init__.py",
+        ]);
+        fs.ReadAllText("/src/pkg/__init__.py").Returns(NestedModuleSource);
+
+        var surface = new PythonScanner(fs).Scan("/src");
+
+        var namespaces = surface.Types.Select(t => t.Namespace).ToList();
+        Assert.Contains("pkg", namespaces);
+        Assert.DoesNotContain("pkg.__init__", namespaces);
+    }
+
+    [Fact]
     public void Scan_NonExistentPath_ReturnsNoTypes()
     {
         var fs = Substitute.For<IFileSystem>();

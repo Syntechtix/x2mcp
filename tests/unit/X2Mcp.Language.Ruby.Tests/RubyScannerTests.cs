@@ -73,6 +73,14 @@ public class RubyScannerTests
         end
         """;
 
+    private const string BackslashOutsideStringSource = """
+        \x
+
+        def visible(value)
+          value
+        end
+        """;
+
     private const string EdgeCasesSource = """
         text = 'def fake_single(a)\n  a\nend'
         other = "def fake_double(b)\nend"
@@ -210,6 +218,28 @@ public class RubyScannerTests
         var surface = new RubyScanner(fs).Scan("/does-not-exist");
 
         Assert.Empty(surface.Types);
+    }
+
+    [Fact]
+    public void Scan_ExistingNonRubyFile_ReturnsNoTypes()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src/readme.txt").Returns(true);
+
+        var surface = new RubyScanner(fs).Scan("/src/readme.txt");
+
+        Assert.Empty(surface.Types);
+    }
+
+    [Fact]
+    public void Scan_LineWithBackslashOutsideString_DoesNotAffectParsing()
+    {
+        var surface = new RubyScanner(FileAt("/src/backslash.rb", BackslashOutsideStringSource))
+            .Scan("/src/backslash.rb");
+
+        Assert.Single(surface.Types);
+        Assert.Single(surface.Types[0].Functions);
+        Assert.Equal("visible", surface.Types[0].Functions[0].Name);
     }
 
     [Fact]
