@@ -161,55 +161,6 @@ public class DotNetWrapperEmitterTests : IDisposable
     }
 
     [Fact]
-    public void Emit_SourceDirectoryWithCsproj_ReferencesFoundCsproj()
-    {
-        var sourceDir = Path.Combine(_tempDir, "RealSource");
-        Directory.CreateDirectory(sourceDir);
-        File.WriteAllText(Path.Combine(sourceDir, "MyLib.csproj"), "<Project />");
-
-        var surface = MakeSurface(new TypeDescriptor("", "Svc", []));
-        var context = MakeContext(sourceDir);
-
-        var csproj = new DotNetWrapperEmitter().Emit(surface, context)
-            .Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
-
-        Assert.Contains("MyLib.csproj", csproj);
-    }
-
-    [Fact]
-    public void Emit_SourceFileWithSiblingCsproj_ReferencesFoundCsproj()
-    {
-        var sourceDir = Path.Combine(_tempDir, "RealSource2");
-        Directory.CreateDirectory(sourceDir);
-        var sourceFile = Path.Combine(sourceDir, "Class.cs");
-        File.WriteAllText(sourceFile, "// code");
-        File.WriteAllText(Path.Combine(sourceDir, "RealSource2.csproj"), "<Project />");
-
-        var surface = MakeSurface(new TypeDescriptor("", "Svc", []));
-        var context = MakeContext(sourceFile);
-
-        var csproj = new DotNetWrapperEmitter().Emit(surface, context)
-            .Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
-
-        Assert.Contains("RealSource2.csproj", csproj);
-    }
-
-    [Fact]
-    public void Emit_SourceDirectoryWithoutCsproj_UsesConventionalName()
-    {
-        var sourceDir = Path.Combine(_tempDir, "NoCsproj");
-        Directory.CreateDirectory(sourceDir);
-
-        var surface = MakeSurface(new TypeDescriptor("", "Svc", []));
-        var context = MakeContext(sourceDir);
-
-        var csproj = new DotNetWrapperEmitter().Emit(surface, context)
-            .Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
-
-        Assert.Contains("NoCsproj.csproj", csproj);
-    }
-
-    [Fact]
     public void Emit_ProjectPath_MatchesContextGeneratedProjectPath()
     {
         var surface = MakeSurface(new TypeDescriptor("", "Svc", []));

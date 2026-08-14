@@ -10,5 +10,6 @@ public static class CommandTokenResolver
             .Replace("{OutputPath}", context.OutputPath)
             .Replace("{GeneratedProjectPath}", context.GeneratedProjectPath)
             .Replace("{ServerName}", context.ServerName)
-            .Replace("{Transport}", context.Transport.ToString());
+            .Replace("{Transport}", context.Transport.ToString())
+            .Replace("{ExeSuffix}", OperatingSystem.IsWindows() ? ".exe" : "");
 }

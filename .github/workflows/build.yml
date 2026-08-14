@@ -152,6 +152,27 @@ jobs:
       - name: Run Ruby Integration Tests
         run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~RubyEndToEndTests"
 
+  integration-rust:
+    name: Rust Integration Test
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Dependencies
+        run: dotnet restore X2Mcp.slnx
+      - name: Run Rust Integration Tests
+        run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~RustEndToEndTests"
+
   go-fixtures-lint:
     name: Go Fixtures Lint
     runs-on: ubuntu-latest
@@ -176,7 +197,7 @@ jobs:
 
   all-checks-passed:
     name: All Checks Passed
-    needs: [build-and-unit-test, integration-dotnet, integration-go, integration-python, integration-ruby, go-fixtures-lint]
+    needs: [build-and-unit-test, integration-dotnet, integration-go, integration-python, integration-ruby, integration-rust, go-fixtures-lint]
     if: always()
     runs-on: ubuntu-latest
     

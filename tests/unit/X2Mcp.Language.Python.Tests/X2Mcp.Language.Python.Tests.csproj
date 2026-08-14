@@ -17,12 +17,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Fixtures/public_functions.py;Fixtures/class_methods.py;Fixtures/unexported.py;Fixtures/test_sample.py;Fixtures/pkg/__init__.py;Fixtures/pkg/nested.py;Fixtures/nested_functions.py;Fixtures/tab_indented_class.py" />
-    <Content Include="Fixtures/public_functions.py;Fixtures/class_methods.py;Fixtures/unexported.py;Fixtures/test_sample.py;Fixtures/pkg/__init__.py;Fixtures/pkg/nested.py;Fixtures/nested_functions.py;Fixtures/tab_indented_class.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="../../../src/X2Mcp.Core/X2Mcp.Core.csproj" />
     <ProjectReference Include="../../../src/X2Mcp.Language.Python/X2Mcp.Language.Python.csproj" />
   </ItemGroup>

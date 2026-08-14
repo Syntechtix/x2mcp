@@ -1,5 +1,17 @@
 # Example: wrapping a Python module
 
+## How scanning works
+
+`x2mcp` always produces a single MCP server from whatever source you give it.
+
+- **Directory** (recommended) — recursively scans all `.py` files in the directory
+  and every subfolder. All discovered top-level functions and class methods are
+  registered as tools in a single server.
+- **Single `.py` file** — wraps only the functions and classes in that one file.
+
+Files matching `test_*.py` or `*_test.py` and anything inside `__pycache__` are
+always skipped.
+
 ## Prerequisites
 
 - Python 3 and [PyInstaller](https://pyinstaller.org/) on your `PATH`.
@@ -31,7 +43,13 @@ class Calculator:
 
 ## 2. Run x2mcp
 
+Point at the directory (whole module) or a single file:
+
 ```bash
+# recommended: whole module directory
+x2mcp ./calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+
+# or: a single file
 x2mcp ./calculator.py --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
@@ -95,8 +113,9 @@ in the HTTP configs below.
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
-`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 **stdio:**
 
@@ -111,7 +130,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 }
 ```
 
-On Windows the PyInstaller binary is `calculator.exe`. Restart Claude after saving.
+Restart Claude after saving.
 
 **HTTP:**
 
@@ -127,7 +146,8 @@ On Windows the PyInstaller binary is `calculator.exe`. Restart Claude after savi
 
 ### ChatGPT Codex
 
-Edit `~/.codex/config.toml`:
+- macOS / Linux: `~/.codex/config.toml`
+- Windows: `%USERPROFILE%\.codex\config.toml`
 
 **stdio:**
 
@@ -147,7 +167,7 @@ url = "http://localhost:8000/mcp"
 
 ### VS Code
 
-Create or edit `.vscode/mcp.json` in your workspace root:
+- macOS / Linux / Windows: `.vscode/mcp.json` (workspace root)
 
 **stdio:**
 
@@ -180,8 +200,7 @@ the calculator tools are available immediately.
 
 ### Visual Studio 2022
 
-Visual Studio 2022 17.14+ reads the same `.vscode/mcp.json` format. Create the file
-at the solution root (next to your `.sln` / `.slnx`):
+- Windows: `.vscode/mcp.json` (solution root, next to your `.sln` / `.slnx`)
 
 **stdio:**
 

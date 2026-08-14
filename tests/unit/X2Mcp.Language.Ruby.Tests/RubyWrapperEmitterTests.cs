@@ -155,4 +155,22 @@ public class RubyWrapperEmitterTests
 
         Assert.Equal(context.GeneratedProjectPath, project.ProjectPath);
     }
+
+    [Fact]
+    public void Emit_NamespaceWithSpecialChars_SanitizesInstanceName()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src/lib.rb").Returns(true);
+        fs.ReadAllText("/src/lib.rb").Returns("\n");
+
+        var surface = MakeSurface(new TypeDescriptor("my-lib", "MyClass", [
+            new FunctionDescriptor("run", [], string.Empty, false),
+        ]));
+
+        var server = new RubyWrapperEmitter(fs)
+            .Emit(surface, MakeContext("/src/lib.rb"))
+            .Files.Single(f => f.RelativePath == "server.rb").Content;
+
+        Assert.Contains("instance_my_lib_MyClass", server);
+    }
 }

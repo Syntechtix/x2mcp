@@ -1,7 +1,7 @@
 {
-  "requiredExecutables": ["pyinstaller", "python"],
-  "buildCommand": "--onefile --name {ServerName} {GeneratedProjectPath}/main.py",
-  "publishCommand": "--onefile --name {ServerName} --distpath {OutputPath} {GeneratedProjectPath}/main.py",
+  "requiredExecutables": ["python", "pyinstaller"],
+  "buildCommand": "-m PyInstaller --onefile --name {ServerName} {GeneratedProjectPath}/main.py",
+  "publishCommand": "-m PyInstaller --onefile --name {ServerName} --distpath {OutputPath} {GeneratedProjectPath}/main.py",
   "supportedTransports": ["Stdio", "StreamableHttp"],
   "sourceExtensions": [".py"]
 }

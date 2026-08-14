@@ -1,5 +1,17 @@
 # Example: wrapping a Ruby script
 
+## How scanning works
+
+`x2mcp` always produces a single MCP server from whatever source you give it.
+
+- **Directory** (recommended) — recursively scans all `.rb` files in the directory
+  and every subfolder. All discovered class methods are registered as tools in a
+  single server.
+- **Single `.rb` file** — wraps only the classes in that one file.
+
+Files matching `test_*.rb` or `*_test.rb` and anything inside `test/` or `spec/`
+subdirectories are always skipped.
+
 ## Prerequisites
 
 - Ruby and [Bundler](https://bundler.io/) on your `PATH`.
@@ -22,7 +34,13 @@ end
 
 ## 2. Run x2mcp
 
+Point at the directory (whole library) or a single file:
+
 ```bash
+# recommended: whole library directory
+x2mcp ./calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+
+# or: a single file
 x2mcp ./calculator.rb --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
@@ -76,17 +94,11 @@ only supports **stdio** transport.
 > **Absolute paths required.** MCP clients launch the launcher as a subprocess;
 > relative paths won't resolve. Replace the placeholder paths below with the real
 > absolute path on your machine.
->
-> On Windows the launcher is `calculator.cmd`; on macOS/Linux it is `calculator`
-> (no extension). Windows clients can't execute `.cmd` files directly as a subprocess
-> command — wrap them with `cmd /c` as shown below.
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
-`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
-
-**macOS / Linux:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 
 ```json
 {
@@ -99,26 +111,12 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 }
 ```
 
-**Windows:**
-
-```json
-{
-  "mcpServers": {
-    "calculator": {
-      "command": "cmd",
-      "args": ["/c", "C:\\absolute\\path\\to\\dist\\calculator-mcp\\calculator.cmd"]
-    }
-  }
-}
-```
-
 Restart Claude after saving.
 
 ### ChatGPT Codex
 
-Edit `~/.codex/config.toml`:
-
-**macOS / Linux:**
+- macOS / Linux: `~/.codex/config.toml`
+- Windows: `%USERPROFILE%\.codex\config.toml`
 
 ```toml
 [[mcp_servers]]
@@ -126,19 +124,9 @@ name = "calculator"
 cmd = ["/absolute/path/to/dist/calculator-mcp/calculator"]
 ```
 
-**Windows:**
-
-```toml
-[[mcp_servers]]
-name = "calculator"
-cmd = ["cmd", "/c", "C:/absolute/path/to/dist/calculator-mcp/calculator.cmd"]
-```
-
 ### VS Code
 
-Create or edit `.vscode/mcp.json` in your workspace root:
-
-**macOS / Linux:**
+- macOS / Linux / Windows: `.vscode/mcp.json` (workspace root)
 
 ```json
 {
@@ -151,38 +139,5 @@ Create or edit `.vscode/mcp.json` in your workspace root:
 }
 ```
 
-**Windows:**
-
-```json
-{
-  "servers": {
-    "calculator": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "${workspaceFolder}/dist/calculator-mcp/calculator.cmd"]
-    }
-  }
-}
-```
-
 The file is picked up automatically — no restart needed. Switch to **Agent mode** and
 the calculator tools are available immediately.
-
-### Visual Studio 2022
-
-Visual Studio 2022 17.14+ reads the same `.vscode/mcp.json` format. Create the file
-at the solution root (next to your `.sln` / `.slnx`):
-
-```json
-{
-  "servers": {
-    "calculator": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "C:/absolute/path/to/dist/calculator-mcp/calculator.cmd"]
-    }
-  }
-}
-```
-
-Restart Visual Studio after creating or modifying the file. Tools appear in Agent mode.

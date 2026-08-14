@@ -19,10 +19,11 @@ public class GoWrapperEmitterFileSystemTests
     public void Emit_SourceIsDirectory_FindsGoModInSameDirectory()
     {
         var fs = Substitute.For<IFileSystem>();
+        var goModPath = Path.Combine("/proj/src", "go.mod");
         fs.FileExists("/proj/src").Returns(false);
         fs.DirectoryExists("/proj/src").Returns(true);
-        fs.FileExists("/proj/src/go.mod").Returns(true);
-        fs.ReadAllText("/proj/src/go.mod").Returns("module example.com/lib\n\ngo 1.23\n");
+        fs.FileExists(goModPath).Returns(true);
+        fs.ReadAllText(goModPath).Returns("module example.com/lib\n\ngo 1.23\n");
 
         var context = MakeContext("/proj/src");
         var project = new GoWrapperEmitter(fs).Emit(EmptySurface("/proj/src"), context);
@@ -36,8 +37,9 @@ public class GoWrapperEmitterFileSystemTests
     {
         var fs = Substitute.For<IFileSystem>();
         fs.FileExists("/proj/src/lib.go").Returns(true);
-        fs.FileExists("/proj/src/go.mod").Returns(true);
-        fs.ReadAllText("/proj/src/go.mod").Returns("module example.com/lib\n\ngo 1.23\n");
+        var fileDir = Path.GetDirectoryName("/proj/src/lib.go")!;
+        fs.FileExists(Path.Combine(fileDir, "go.mod")).Returns(true);
+        fs.ReadAllText(Path.Combine(fileDir, "go.mod")).Returns("module example.com/lib\n\ngo 1.23\n");
 
         var context = MakeContext("/proj/src/lib.go");
         var project = new GoWrapperEmitter(fs).Emit(EmptySurface("/proj/src/lib.go"), context);
@@ -51,9 +53,10 @@ public class GoWrapperEmitterFileSystemTests
     {
         var fs = Substitute.For<IFileSystem>();
         fs.FileExists("/proj/src/pkg").Returns(false);
-        fs.FileExists("/proj/src/pkg/go.mod").Returns(false);
-        fs.FileExists("/proj/src/go.mod").Returns(true);
-        fs.ReadAllText("/proj/src/go.mod").Returns("module example.com/lib\n\ngo 1.23\n");
+        fs.FileExists(Path.Combine("/proj/src/pkg", "go.mod")).Returns(false);
+        var parent = Path.GetDirectoryName("/proj/src/pkg".TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))!;
+        fs.FileExists(Path.Combine(parent, "go.mod")).Returns(true);
+        fs.ReadAllText(Path.Combine(parent, "go.mod")).Returns("module example.com/lib\n\ngo 1.23\n");
 
         var context = MakeContext("/proj/src/pkg");
         var project = new GoWrapperEmitter(fs).Emit(EmptySurface("/proj/src/pkg"), context);
@@ -79,8 +82,8 @@ public class GoWrapperEmitterFileSystemTests
     {
         var fs = Substitute.For<IFileSystem>();
         fs.FileExists("/src").Returns(false);
-        fs.FileExists("/src/go.mod").Returns(true);
-        fs.ReadAllText("/src/go.mod").Returns("module example.com/lib\n\ngo 1.23\n");
+        fs.FileExists(Path.Combine("/src", "go.mod")).Returns(true);
+        fs.ReadAllText(Path.Combine("/src", "go.mod")).Returns("module example.com/lib\n\ngo 1.23\n");
 
         var context = MakeContext("/src", Transport.StreamableHttp);
         var project = new GoWrapperEmitter(fs).Emit(EmptySurface("/src"), context);

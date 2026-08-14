@@ -18,8 +18,19 @@ public class RoslynScanner : IScanner
 
     public ScannedSurface Scan(string sourcePath)
     {
-        var files = _fileSystem.DirectoryExists(sourcePath)
-            ? _fileSystem.GetFiles(sourcePath, "*.cs", SearchOption.AllDirectories)
+        var scanRoot = sourcePath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)
+            ? Path.GetDirectoryName(sourcePath)!
+            : sourcePath;
+
+        var files = _fileSystem.DirectoryExists(scanRoot)
+            ? _fileSystem.GetFiles(scanRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(f =>
+                {
+                    var rel = Path.GetRelativePath(scanRoot, f).Replace(Path.DirectorySeparatorChar, '/');
+                    return !rel.StartsWith("bin/") && !rel.StartsWith("obj/")
+                        && !rel.Contains("/bin/") && !rel.Contains("/obj/");
+                })
+                .ToArray()
             : [sourcePath];
 
         var types = new List<TypeDescriptor>();

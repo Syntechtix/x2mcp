@@ -38,6 +38,25 @@ public class OrchestrationEngineTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_OutputDirectoryDoesNotExist_IsCreatedBeforeToolchainRuns()
+    {
+        // Regression: some toolchains (e.g. `go build -o`) fail if the output directory
+        // doesn't already exist, so the engine must create it up front rather than relying
+        // on the underlying build tool to do so.
+        var sourceDir = CreateSourceDir("src9", ".stub");
+        var outDir = Path.Combine(_tempDir, "does", "not", "exist", "yet");
+        var fake = new FakeProcessRunner();
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+
+        Assert.False(Directory.Exists(outDir));
+
+        var result = await engine.RunAsync(sourceDir, outDir, "NewDirSvr", Transport.Stdio);
+
+        Assert.True(result.Success);
+        Assert.True(Directory.Exists(outDir));
+    }
+
+    [Fact]
     public async Task RunAsync_ProcessFails_ReturnsFailure()
     {
         var sourceDir = CreateSourceDir("src2", ".stub");

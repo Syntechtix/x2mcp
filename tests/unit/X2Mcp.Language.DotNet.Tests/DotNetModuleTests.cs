@@ -16,6 +16,10 @@ public class DotNetModuleTests
         Assert.Contains(".cs", _module.FileExtensions);
 
     [Fact]
+    public void FileExtensions_ContainsCsprojExtension() =>
+        Assert.Contains(".csproj", _module.FileExtensions);
+
+    [Fact]
     public void Toolchain_IsNotNull() => Assert.NotNull(_module.Toolchain);
 
     [Fact]

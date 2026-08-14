@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>X2Mcp.Language.Ruby.Tests</AssemblyName>
-    <RootNamespace>X2Mcp.Language.Ruby.Tests</RootNamespace>
+    <AssemblyName>X2Mcp.Integration.Rust.Tests</AssemblyName>
+    <RootNamespace>X2Mcp.Integration.Rust.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
-    <PackageReference Include="NSubstitute" Version="6.2.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -17,7 +16,14 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <!-- RustSampleLib is fixture source — copy to output but do not compile into this project -->
+    <Compile Remove="Fixtures/**/*.cs" />
+    <Content Include="Fixtures/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../../src/X2Mcp.Core/X2Mcp.Core.csproj" />
-    <ProjectReference Include="../../../src/X2Mcp.Language.Ruby/X2Mcp.Language.Ruby.csproj" />
+    <ProjectReference Include="../../../src/X2Mcp.Language.Rust/X2Mcp.Language.Rust.csproj" />
   </ItemGroup>
 </Project>

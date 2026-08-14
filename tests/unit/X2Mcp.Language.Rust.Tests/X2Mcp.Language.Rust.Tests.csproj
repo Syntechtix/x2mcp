@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>X2Mcp.Language.Ruby.Tests</AssemblyName>
-    <RootNamespace>X2Mcp.Language.Ruby.Tests</RootNamespace>
+    <AssemblyName>X2Mcp.Language.Rust.Tests</AssemblyName>
+    <RootNamespace>X2Mcp.Language.Rust.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
@@ -17,7 +17,14 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <!-- Exclude fixture .rs files from compilation — they are test data for RustScanner -->
+    <Compile Remove="Fixtures/public_functions.rs;Fixtures/unexported.rs;Fixtures/methods.rs;Fixtures/tests/sample_test.rs" />
+    <Content Include="Fixtures/public_functions.rs;Fixtures/unexported.rs;Fixtures/methods.rs;Fixtures/tests/sample_test.rs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../../src/X2Mcp.Core/X2Mcp.Core.csproj" />
-    <ProjectReference Include="../../../src/X2Mcp.Language.Ruby/X2Mcp.Language.Ruby.csproj" />
+    <ProjectReference Include="../../../src/X2Mcp.Language.Rust/X2Mcp.Language.Rust.csproj" />
   </ItemGroup>
 </Project>

@@ -4,6 +4,17 @@
 exported (capitalized) top-level function, and generates a companion Go module that
 imports your original package and exposes those functions as MCP tools.
 
+## How scanning works
+
+`x2mcp` always produces a single MCP server from whatever source you give it.
+
+- **Directory** (recommended) — recursively scans all `.go` files in the directory
+  and every subfolder. This is the normal way to wrap a whole package or module.
+- **Single `.go` file** — wraps only the exported functions in that one file.
+
+`_test.go` files are always skipped. Go has no project file concept — the directory
+*is* the package.
+
 ## Prerequisites
 
 - [Go toolchain](https://go.dev/dl/) — `go` must be on your `PATH` so `x2mcp` can
@@ -14,10 +25,13 @@ imports your original package and exposes those functions as MCP tools.
 
 ## 1. The source package
 
+A real package typically spans multiple files:
+
 ```
 calculator/
 ├── go.mod
-└── calculator.go
+├── add.go
+└── divide.go
 ```
 
 ```
@@ -50,11 +64,16 @@ with receivers, and `_test.go` files are skipped.
 
 ## 2. Run x2mcp
 
+Point at the directory (whole package) or a single file:
+
 ```bash
+# recommended: whole package directory
 x2mcp ./calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+
+# or: a single file
+x2mcp ./calculator/add.go --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
-- `./calculator` — the source directory (a directory or a single `.go` file both work)
 - `--out` — where the built, runnable MCP server binary ends up
 - `--name` — the server name (also used for the generated project's temp folder)
 - `--transport` — `stdio` (default) or `http`
@@ -189,8 +208,9 @@ The server listens on `:8080` (hardcoded in the generated code). Use
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
-`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 **stdio:**
 
@@ -205,7 +225,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 }
 ```
 
-On Windows the binary is `calculator.exe`. Restart Claude after saving.
+Restart Claude after saving.
 
 **HTTP:**
 
@@ -221,7 +241,8 @@ On Windows the binary is `calculator.exe`. Restart Claude after saving.
 
 ### ChatGPT Codex
 
-Edit `~/.codex/config.toml`:
+- macOS / Linux: `~/.codex/config.toml`
+- Windows: `%USERPROFILE%\.codex\config.toml`
 
 **stdio:**
 
@@ -241,7 +262,7 @@ url = "http://localhost:8080"
 
 ### VS Code
 
-Create or edit `.vscode/mcp.json` in your workspace root:
+- macOS / Linux / Windows: `.vscode/mcp.json` (workspace root)
 
 **stdio:**
 
@@ -274,8 +295,7 @@ the calculator tools are available immediately.
 
 ### Visual Studio 2022
 
-Visual Studio 2022 17.14+ reads the same `.vscode/mcp.json` format. Create the file
-at the solution root (next to your `.sln` / `.slnx`):
+- Windows: `.vscode/mcp.json` (solution root, next to your `.sln` / `.slnx`)
 
 **stdio:**
 

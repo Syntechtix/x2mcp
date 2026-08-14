@@ -4,6 +4,18 @@
 `public` method on every `public` class, and generates a companion MCP server project
 that references your original code and exposes those methods as MCP tools.
 
+## How scanning works
+
+`x2mcp` always produces a single MCP server from whatever source you give it.
+
+- **`.csproj` file** (recommended) — scans all `.cs` files in the project directory
+  and every subfolder, excluding `bin/` and `obj/`. This is the most reliable input
+  because the generated wrapper gets an exact `<ProjectReference>` to your project.
+- **Directory** — same recursive scan of `*.cs` files, `bin/` and `obj/` excluded.
+- **Single `.cs` file** — wraps only the public types in that one file.
+
+Test files and generated output in `bin/`/`obj/` are always skipped.
+
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) — `dotnet` must be on your
@@ -13,10 +25,13 @@ that references your original code and exposes those methods as MCP tools.
 
 ## 1. The source project
 
+A real project typically has multiple files:
+
 ```
 Calculator/
 ├── Calculator.csproj
-└── Calculator.cs
+├── Calculator.cs
+└── Division.cs
 ```
 
 ```csharp
@@ -39,11 +54,19 @@ public class Calculator
 
 ## 2. Run x2mcp
 
-```bash
+Point at the `.csproj` file, the directory, or a single file — all three work:
+
+```powershell
+# recommended: project file
+x2mcp ./Calculator/Calculator.csproj --out ./dist/calculator-mcp --name calculator --transport stdio
+
+# or: the whole directory
 x2mcp ./Calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+
+# or: a single file
+x2mcp ./Calculator/Calculator.cs --out ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
-- `./Calculator` — the source directory (an entire folder or a single `.cs` file both work)
 - `--out` — where the built, runnable MCP server ends up
 - `--name` — the server name (also used for the generated project's temp folder)
 - `--transport` — `stdio` (default) or `http`
@@ -171,15 +194,11 @@ Once `./dist/calculator-mcp/` exists, register the server in any MCP client.
 
 If you built with `--transport http`, start the binary before configuring any client:
 
-```bash
-./dist/calculator-mcp/calculator
+```powershell
+.\dist\calculator-mcp\calculator.exe
 ```
 
 ASP.NET Core listens on `http://localhost:5000` by default. To use a different port:
-
-```bash
-ASPNETCORE_URLS=http://localhost:9000 ./dist/calculator-mcp/calculator
-```
 
 ```powershell
 $env:ASPNETCORE_URLS="http://localhost:9000"; .\dist\calculator-mcp\calculator.exe
@@ -189,8 +208,9 @@ Use `http://localhost:5000/mcp` (or your custom port) in the HTTP configs below.
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
-`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 **stdio:**
 
@@ -198,14 +218,14 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 {
   "mcpServers": {
     "calculator": {
-      "command": "/absolute/path/to/dist/calculator-mcp/calculator",
+      "command": "C:/absolute/path/to/dist/calculator-mcp/calculator.exe",
       "args": []
     }
   }
 }
 ```
 
-On Windows the binary is `calculator.exe`. Restart Claude after saving.
+Restart Claude after saving.
 
 **HTTP:**
 
@@ -221,7 +241,8 @@ On Windows the binary is `calculator.exe`. Restart Claude after saving.
 
 ### ChatGPT Codex
 
-Edit `~/.codex/config.toml`:
+- macOS / Linux: `~/.codex/config.toml`
+- Windows: `%USERPROFILE%\.codex\config.toml`
 
 **stdio:**
 
@@ -241,7 +262,7 @@ url = "http://localhost:5000/mcp"
 
 ### VS Code
 
-Create or edit `.vscode/mcp.json` in your workspace root:
+- macOS / Linux / Windows: `.vscode/mcp.json` (workspace root)
 
 **stdio:**
 
@@ -274,8 +295,7 @@ the calculator tools are available immediately.
 
 ### Visual Studio 2022
 
-Visual Studio 2022 17.14+ reads the same `.vscode/mcp.json` format. Create the file
-at the solution root (next to your `.sln` / `.slnx`):
+- Windows: `.vscode/mcp.json` (solution root, next to your `.sln` / `.slnx`)
 
 **stdio:**
 

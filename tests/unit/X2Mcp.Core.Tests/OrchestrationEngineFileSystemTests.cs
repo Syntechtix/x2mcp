@@ -71,6 +71,24 @@ public class OrchestrationEngineFileSystemTests
     }
 
     [Fact]
+    public async Task RunAsync_AlwaysCreatesOutputDirectory_BeforePublishing()
+    {
+        // Regression: not every toolchain creates its own output directory (e.g. `go build -o`
+        // fails outright if the target directory doesn't already exist).
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src/file.stub").Returns(true);
+        fs.WriteAllTextAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var runner = new FakeProcessRunner();
+        var engine = MakeEngine(fs, runner, new StubLanguageModule(".stub"));
+
+        await engine.RunAsync("/src/file.stub", "/out", "MySvr", Transport.Stdio);
+
+        fs.Received().CreateDirectory("/out");
+    }
+
+    [Fact]
     public async Task RunAsync_EmptySource_ThrowsNoLanguageModuleException()
     {
         var fs = Substitute.For<IFileSystem>();

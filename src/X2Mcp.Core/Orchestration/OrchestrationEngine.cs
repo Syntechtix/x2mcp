@@ -56,6 +56,10 @@ public class OrchestrationEngine
         var transportLabel = transport == Transport.Stdio ? "stdio" : "http";
         progress?.Invoke($"Creating {transportLabel} server...");
 
+        // Not every toolchain creates its output directory for us (e.g. `go build -o` fails outright
+        // if the target directory doesn't already exist), so guarantee it exists before publishing.
+        _fileSystem.CreateDirectory(outputPath);
+
         var executable = module.Toolchain.RequiredExecutables[0];
         var resolvedArgs = CommandTokenResolver.Resolve(module.Toolchain.PublishCommand, context);
         var result = await _processRunner.RunAsync(executable, resolvedArgs, generatedProjectPath, ct);

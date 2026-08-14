@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using X2Mcp.Core.Abstractions;
@@ -32,7 +33,20 @@ public class ProcessRunner : IProcessRunner
         process.OutputDataReceived += (_, e) => { if (e.Data != null) stdout.AppendLine(e.Data); };
         process.ErrorDataReceived += (_, e) => { if (e.Data != null) stderr.AppendLine(e.Data); };
 
-        process.Start();
+        try
+        {
+            process.Start();
+        }
+        catch (Win32Exception ex)
+        {
+            // Thrown when the executable can't be found/launched (e.g. not on PATH) — surface this as a
+            // failed build result instead of an unhandled exception, so callers get an actionable message.
+            return new ProcessResult(
+                -1,
+                string.Empty,
+                $"Failed to start '{executable}': {ex.Message}. Is it installed and on PATH?");
+        }
+
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 

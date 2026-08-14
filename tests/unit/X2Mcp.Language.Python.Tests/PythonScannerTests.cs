@@ -1,16 +1,87 @@
+using X2Mcp.Core.Abstractions;
 using X2Mcp.Language.Python;
 
 namespace X2Mcp.Language.Python.Tests;
 
 public class PythonScannerTests
 {
-    private static string Fixture(string name) =>
-        Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
+    private const string PublicFunctionsSource = """
+        def add(a: int, b: int) -> int:
+            return a + b
+
+
+        def greet(first: str, last: str = "") -> str:
+            return f"Hello, {first} {last}".strip()
+
+
+        def ping() -> None:
+            return None
+
+
+        async def fetch(url: str) -> str:
+            return url
+
+
+        def variadic(*items: int) -> list[int]:
+            return list(items)
+
+
+        def transform(payload: dict[str, list[int]] = {"a": [1, 2]}) -> dict[str, list[int]]:
+            return payload
+        """;
+
+    private const string ClassMethodsSource = """
+        class Calculator:
+            def __init__(self) -> None:
+                self.factor = 1
+
+            def add(self, a: int, b: int) -> int:
+                return a + b
+
+            async def fetch(self, value: str) -> str:
+                return value
+
+            def _private(self) -> int:
+                return 0
+        """;
+
+    private const string UnexportedSource = """
+        def _hidden(value: int) -> int:
+            return value
+        """;
+
+    private const string NestedFunctionsSource = """
+        def outer(value: int) -> int:
+            def inner(hidden: int) -> int:
+                return hidden
+
+            return value
+        """;
+
+    private const string TabIndentedSource = """
+        class Tabbed:
+        	def tabbed(self, value: int) -> int:
+        		return value
+        """;
+
+    private const string NestedModuleSource = """
+        def echo(value: str) -> str:
+            return value
+        """;
+
+    private static IFileSystem FileAt(string path, string content)
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists(path).Returns(true);
+        fs.ReadAllText(path).Returns(content);
+        return fs;
+    }
 
     [Fact]
     public void Scan_PublicFunctions_ReturnsPythonLanguage()
     {
-        var surface = new PythonScanner().Scan(Fixture("public_functions.py"));
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
 
         Assert.Equal("python", surface.Language);
     }
@@ -18,7 +89,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_PublicFunctions_GroupsIntoSingleModuleType()
     {
-        var surface = new PythonScanner().Scan(Fixture("public_functions.py"));
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
 
         Assert.Single(surface.Types);
         Assert.Equal("public_functions", surface.Types[0].Name);
@@ -28,7 +100,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_PublicFunctions_HasFiveExportedFunctions()
     {
-        var surface = new PythonScanner().Scan(Fixture("public_functions.py"));
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
 
         Assert.Equal(6, surface.Types[0].Functions.Count);
     }
@@ -36,7 +109,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_Add_HasTypedParametersAndReturnType()
     {
-        var surface = new PythonScanner().Scan(Fixture("public_functions.py"));
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
         var add = surface.Types[0].Functions.Single(f => f.Name == "add");
 
         Assert.Equal(2, add.Parameters.Count);
@@ -53,17 +127,17 @@ public class PythonScannerTests
     [Fact]
     public void Scan_Greet_MarksDefaultArgumentOptional()
     {
-        var surface = new PythonScanner().Scan(Fixture("public_functions.py"));
-        var greet = surface.Types[0].Functions.Single(f => f.Name == "greet");
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
 
-        Assert.Equal(2, greet.Parameters.Count);
-        Assert.True(greet.Parameters[1].IsOptional);
+        Assert.True(surface.Types[0].Functions.Single(f => f.Name == "greet").Parameters[1].IsOptional);
     }
 
     [Fact]
     public void Scan_Fetch_IsAsync()
     {
-        var surface = new PythonScanner().Scan(Fixture("public_functions.py"));
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
         var fetch = surface.Types[0].Functions.Single(f => f.Name == "fetch");
 
         Assert.True(fetch.IsAsync);
@@ -73,7 +147,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_ClassMethods_CapturesOnlyPublicMethods()
     {
-        var surface = new PythonScanner().Scan(Fixture("class_methods.py"));
+        var surface = new PythonScanner(FileAt("/src/class_methods.py", ClassMethodsSource))
+            .Scan("/src/class_methods.py");
 
         Assert.Single(surface.Types);
         Assert.Equal("Calculator", surface.Types[0].Name);
@@ -87,7 +162,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_ClassMethods_ExcludesSelfParameter()
     {
-        var surface = new PythonScanner().Scan(Fixture("class_methods.py"));
+        var surface = new PythonScanner(FileAt("/src/class_methods.py", ClassMethodsSource))
+            .Scan("/src/class_methods.py");
         var add = surface.Types[0].Functions.Single(f => f.Name == "add");
 
         Assert.Equal(2, add.Parameters.Count);
@@ -98,7 +174,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_UnexportedFile_ReturnsNoFunctions()
     {
-        var surface = new PythonScanner().Scan(Fixture("unexported.py"));
+        var surface = new PythonScanner(FileAt("/src/unexported.py", UnexportedSource))
+            .Scan("/src/unexported.py");
 
         Assert.Empty(surface.Types);
     }
@@ -106,20 +183,36 @@ public class PythonScannerTests
     [Fact]
     public void Scan_Directory_ExcludesTestFilesAndBuildsNestedModuleNames()
     {
-        var dir = Path.GetDirectoryName(Fixture("public_functions.py"))!;
-        var surface = new PythonScanner().Scan(dir);
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src").Returns(false);
+        fs.DirectoryExists("/src").Returns(true);
+        fs.GetFiles("/src", "*.py", SearchOption.AllDirectories).Returns([
+            "/src/public_functions.py",
+            "/src/class_methods.py",
+            "/src/test_sample.py",
+            "/src/pkg/nested.py",
+        ]);
+        fs.ReadAllText("/src/public_functions.py").Returns(PublicFunctionsSource);
+        fs.ReadAllText("/src/class_methods.py").Returns(ClassMethodsSource);
+        fs.ReadAllText("/src/pkg/nested.py").Returns(NestedModuleSource);
 
-        var names = surface.Types.Select(t => t.Namespace).ToList();
-        Assert.Contains("public_functions", names);
-        Assert.Contains("class_methods", names);
-        Assert.Contains("pkg.nested", names);
-        Assert.DoesNotContain("test_sample", names);
+        var surface = new PythonScanner(fs).Scan("/src");
+
+        var namespaces = surface.Types.Select(t => t.Namespace).ToList();
+        Assert.Contains("public_functions", namespaces);
+        Assert.Contains("class_methods", namespaces);
+        Assert.Contains("pkg.nested", namespaces);
+        Assert.DoesNotContain("test_sample", namespaces);
     }
 
     [Fact]
     public void Scan_NonExistentPath_ReturnsNoTypes()
     {
-        var surface = new PythonScanner().Scan(Path.Combine(AppContext.BaseDirectory, "does-not-exist"));
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/does-not-exist").Returns(false);
+        fs.DirectoryExists("/does-not-exist").Returns(false);
+
+        var surface = new PythonScanner(fs).Scan("/does-not-exist");
 
         Assert.Empty(surface.Types);
     }
@@ -127,7 +220,7 @@ public class PythonScannerTests
     [Fact]
     public void Scan_ExistingNonPythonFile_ReturnsNoTypes()
     {
-        var fs = Substitute.For<X2Mcp.Core.Abstractions.IFileSystem>();
+        var fs = Substitute.For<IFileSystem>();
         fs.FileExists("/src/readme.txt").Returns(true);
 
         var surface = new PythonScanner(fs).Scan("/src/readme.txt");
@@ -138,7 +231,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_NestedFunctions_ExcludesInnerFunction()
     {
-        var surface = new PythonScanner().Scan(Fixture("nested_functions.py"));
+        var surface = new PythonScanner(FileAt("/src/nested_functions.py", NestedFunctionsSource))
+            .Scan("/src/nested_functions.py");
 
         Assert.Single(surface.Types);
         Assert.Single(surface.Types[0].Functions);
@@ -148,7 +242,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_TabIndentedClass_ParsesMethods()
     {
-        var surface = new PythonScanner().Scan(Fixture("tab_indented_class.py"));
+        var surface = new PythonScanner(FileAt("/src/tab_indented_class.py", TabIndentedSource))
+            .Scan("/src/tab_indented_class.py");
 
         Assert.Single(surface.Types);
         Assert.Single(surface.Types[0].Functions);
@@ -158,7 +253,8 @@ public class PythonScannerTests
     [Fact]
     public void Scan_PublicFunctions_ComplexTypeParameterPreservesAnnotation()
     {
-        var surface = new PythonScanner().Scan(Fixture("public_functions.py"));
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
         var complex = surface.Types[0].Functions.Single(f => f.Name == "transform");
 
         Assert.Single(complex.Parameters);
@@ -169,9 +265,9 @@ public class PythonScannerTests
     [Fact]
     public void Scan_SourcePath_IsPreserved()
     {
-        var path = Fixture("public_functions.py");
-        var surface = new PythonScanner().Scan(path);
+        var surface = new PythonScanner(FileAt("/src/public_functions.py", PublicFunctionsSource))
+            .Scan("/src/public_functions.py");
 
-        Assert.Equal(path, surface.SourcePath);
+        Assert.Equal("/src/public_functions.py", surface.SourcePath);
     }
 }

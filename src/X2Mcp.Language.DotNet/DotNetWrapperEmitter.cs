@@ -36,6 +36,10 @@ public class DotNetWrapperEmitter : IWrapperEmitter
 
     private string FindSourceCsproj(string sourcePath)
     {
+        if (sourcePath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)
+            && _fileSystem.FileExists(sourcePath))
+            return sourcePath;
+
         var dir = _fileSystem.FileExists(sourcePath)
             ? Path.GetDirectoryName(sourcePath)!
             : sourcePath;

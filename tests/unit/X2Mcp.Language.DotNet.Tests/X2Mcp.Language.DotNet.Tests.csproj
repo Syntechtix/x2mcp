@@ -17,13 +17,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <!-- Exclude fixture .cs files from compilation — they are test data for RoslynScanner -->
-    <Compile Remove="Fixtures/PublicMethods.cs;Fixtures/InternalClass.cs;Fixtures/PrivateMethods.cs;Fixtures/BlockNamespace.cs" />
-    <Content Include="Fixtures/PublicMethods.cs;Fixtures/InternalClass.cs;Fixtures/PrivateMethods.cs;Fixtures/BlockNamespace.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="../../../src/X2Mcp.Core/X2Mcp.Core.csproj" />
     <ProjectReference Include="../../../src/X2Mcp.Language.DotNet/X2Mcp.Language.DotNet.csproj" />
   </ItemGroup>

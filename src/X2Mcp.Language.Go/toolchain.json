@@ -1,7 +1,7 @@
 {
   "requiredExecutables": ["go"],
-  "buildCommand": "build -mod=mod -o {OutputPath}/{ServerName} {GeneratedProjectPath}",
-  "publishCommand": "build -mod=mod -o {OutputPath}/{ServerName} {GeneratedProjectPath}",
+  "buildCommand": "build -mod=mod -o {OutputPath}/{ServerName}{ExeSuffix} {GeneratedProjectPath}",
+  "publishCommand": "build -mod=mod -o {OutputPath}/{ServerName}{ExeSuffix} {GeneratedProjectPath}",
   "supportedTransports": ["Stdio", "StreamableHttp"],
   "sourceExtensions": [".go"]
 }

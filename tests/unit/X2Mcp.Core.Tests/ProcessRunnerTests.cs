@@ -39,4 +39,16 @@ public class ProcessRunnerTests
         // but at minimum one of the output streams should be non-empty
         Assert.True(result.StandardOutput.Length > 0 || result.StandardError.Length > 0);
     }
+
+    [Fact]
+    public async Task RunAsync_ExecutableNotOnPath_ReturnsFailureInsteadOfThrowing()
+    {
+        var runner = new ProcessRunner();
+        var missingExecutable = $"x2mcp-does-not-exist-{Guid.NewGuid():N}";
+
+        var result = await runner.RunAsync(missingExecutable, string.Empty, Path.GetTempPath());
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains(missingExecutable, result.StandardError);
+    }
 }

@@ -3,5 +3,5 @@
   "buildCommand": "build {GeneratedProjectPath} -c Release",
   "publishCommand": "publish {GeneratedProjectPath} -c Release -o {OutputPath} --self-contained",
   "supportedTransports": ["Stdio", "StreamableHttp"],
-  "sourceExtensions": [".cs"]
+  "sourceExtensions": [".cs", ".csproj"]
 }
