@@ -9,11 +9,12 @@ public sealed class StubLanguageModule : ILanguageModule
     public StubLanguageModule(
         string fileExtension,
         ScannedSurface? surface = null,
-        EmittedProject? emittedProject = null)
+        EmittedProject? emittedProject = null,
+        IReadOnlyList<string>? requiredExecutables = null)
     {
         FileExtensions = [fileExtension];
         Toolchain = new ToolchainConfig(
-            RequiredExecutables: ["stub-tool"],
+            RequiredExecutables: requiredExecutables ?? ["stub-tool"],
             BuildCommand: "build {GeneratedProjectPath}",
             PublishCommand: "publish {GeneratedProjectPath} -o {OutputPath}",
             SupportedTransports: [Transport.Stdio, Transport.StreamableHttp],

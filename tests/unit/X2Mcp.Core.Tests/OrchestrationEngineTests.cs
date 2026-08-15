@@ -1,3 +1,6 @@
+using NSubstitute;
+using X2Mcp.Core.Abstractions;
+using X2Mcp.Core.Config;
 using X2Mcp.Core.Models;
 using X2Mcp.Core.Orchestration;
 
@@ -32,8 +35,9 @@ public class OrchestrationEngineTests : IDisposable
         Assert.True(result.Success);
         Assert.Equal(outDir, result.OutputPath);
         Assert.Null(result.Error);
-        Assert.Single(fake.Calls);
-        Assert.Equal("stub-tool", fake.Calls[0].Executable);
+        // One call to probe toolchain availability, one to actually run the publish command.
+        Assert.Equal(2, fake.Calls.Count);
+        Assert.Equal("stub-tool", fake.Calls[^1].Executable);
         Assert.True(File.Exists(Path.Combine(_tempDir, "gen", "MyServer", "stub.txt")));
     }
 
@@ -80,8 +84,8 @@ public class OrchestrationEngineTests : IDisposable
         await engine.RunAsync(sourceDir, outDir, "TokSvr", Transport.Stdio);
 
         var genPath = Path.Combine(_tempDir, "gen", "TokSvr");
-        Assert.Contains(genPath, fake.Calls[0].Arguments);
-        Assert.Contains(outDir, fake.Calls[0].Arguments);
+        Assert.Contains(genPath, fake.Calls[^1].Arguments);
+        Assert.Contains(outDir, fake.Calls[^1].Arguments);
     }
 
     [Fact]
@@ -180,6 +184,105 @@ public class OrchestrationEngineTests : IDisposable
             if (Directory.Exists(expectedGenDir))
                 Directory.Delete(expectedGenDir, recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task RunAsync_RequiredToolMissing_ReturnsFailureNamingToolAndFullList()
+    {
+        var sourceDir = CreateSourceDir("src11", ".stub");
+        var fake = new FakeProcessRunner { DefaultResult = new ProcessResult(-1, string.Empty, "not found") };
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out11"), "MissingToolSvr", Transport.Stdio);
+
+        Assert.False(result.Success);
+        Assert.Equal(
+            "Missing required tool for stub: stub-tool. The stub toolchain requires: stub-tool.",
+            result.Error);
+    }
+
+    [Fact]
+    public async Task RunAsync_RequiredToolMissing_DoesNotAttemptScanOrBuild()
+    {
+        var sourceDir = CreateSourceDir("src12", ".stub");
+        var fake = new FakeProcessRunner { DefaultResult = new ProcessResult(-1, string.Empty, "not found") };
+        var engine = MakeEngine(fake, new StubLanguageModule(".stub"));
+
+        await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out12"), "MissingToolSvr2", Transport.Stdio);
+
+        Assert.Single(fake.Calls);
+        Assert.False(Directory.Exists(Path.Combine(_tempDir, "gen", "MissingToolSvr2")));
+    }
+
+    [Fact]
+    public async Task RunAsync_OneOfMultipleRequiredToolsMissing_ReportsOnlyTheMissingOneAndFullList()
+    {
+        var sourceDir = CreateSourceDir("src13", ".stub");
+        var fake = new FakeProcessRunner
+        {
+            DefaultResult = new ProcessResult(0, string.Empty, string.Empty),
+            ResultsByExecutable = { ["second-tool"] = new ProcessResult(-1, string.Empty, "not found") },
+        };
+        var module = new StubLanguageModule(".stub", requiredExecutables: ["stub-tool", "second-tool"]);
+        var engine = MakeEngine(fake, module);
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out13"), "PartialMissingSvr", Transport.Stdio);
+
+        Assert.False(result.Success);
+        Assert.Equal(
+            "Missing required tool for stub: second-tool. The stub toolchain requires: stub-tool, second-tool.",
+            result.Error);
+    }
+
+    [Fact]
+    public async Task RunAsync_AllRequiredToolsAvailable_ProceedsToBuild()
+    {
+        var sourceDir = CreateSourceDir("src14", ".stub");
+        var fake = new FakeProcessRunner();
+        var module = new StubLanguageModule(".stub", requiredExecutables: ["stub-tool", "second-tool"]);
+        var engine = MakeEngine(fake, module);
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out14"), "AllAvailableSvr", Transport.Stdio);
+
+        Assert.True(result.Success);
+        // Two probe calls (stub-tool, second-tool) plus the actual publish invocation.
+        Assert.Equal(3, fake.Calls.Count);
+    }
+
+    [Fact]
+    public async Task RunAsync_MultipleRequiredToolsMissing_UsesPluralWordingAndListsAll()
+    {
+        var sourceDir = CreateSourceDir("src15", ".stub");
+        var fake = new FakeProcessRunner { DefaultResult = new ProcessResult(-1, string.Empty, "not found") };
+        var module = new StubLanguageModule(".stub", requiredExecutables: ["stub-tool", "second-tool"]);
+        var engine = MakeEngine(fake, module);
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out15"), "AllMissingSvr", Transport.Stdio);
+
+        Assert.False(result.Success);
+        Assert.Equal(
+            "Missing required tools for stub: stub-tool, second-tool. The stub toolchain requires: stub-tool, second-tool.",
+            result.Error);
+    }
+
+    [Fact]
+    public async Task RunAsync_ExplicitToolchainValidatorProvided_IsUsedInsteadOfDefault()
+    {
+        var sourceDir = CreateSourceDir("src16", ".stub");
+        var fake = new FakeProcessRunner();
+        var validator = Substitute.For<IToolchainValidator>();
+        validator.FindMissingExecutablesAsync(Arg.Any<ToolchainConfig>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<string>>([]));
+        var engine = new OrchestrationEngine(
+            [new StubLanguageModule(".stub")],
+            fake,
+            generatedProjectsRoot: Path.Combine(_tempDir, "gen"),
+            toolchainValidator: validator);
+
+        var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out16"), "CustomValidatorSvr", Transport.Stdio);
+
+        Assert.True(result.Success);
+        await validator.Received(1).FindMissingExecutablesAsync(Arg.Any<ToolchainConfig>(), Arg.Any<CancellationToken>());
     }
 
     private string CreateSourceDir(string name, string ext)

@@ -9,18 +9,21 @@ public class OrchestrationEngine
     private readonly IReadOnlyList<ILanguageModule> _modules;
     private readonly IProcessRunner _processRunner;
     private readonly IFileSystem _fileSystem;
+    private readonly IToolchainValidator _toolchainValidator;
     private readonly string _generatedProjectsRoot;
 
     public OrchestrationEngine(
         IReadOnlyList<ILanguageModule> modules,
         IProcessRunner processRunner,
         IFileSystem? fileSystem = null,
-        string? generatedProjectsRoot = null)
+        string? generatedProjectsRoot = null,
+        IToolchainValidator? toolchainValidator = null)
     {
         _modules = modules;
         _processRunner = processRunner;
         _fileSystem = fileSystem ?? new FileSystem();
         _generatedProjectsRoot = generatedProjectsRoot ?? Path.Combine(Path.GetTempPath(), "x2mcp");
+        _toolchainValidator = toolchainValidator ?? new X2Mcp.Core.Toolchain.ToolchainValidator(processRunner);
     }
 
     public async Task<BuildResult> RunAsync(
@@ -33,6 +36,10 @@ public class OrchestrationEngine
     {
         var module = DetectModule(sourcePath);
         progress?.Invoke($"Detected language: {module.Language}");
+
+        var missingExecutables = await _toolchainValidator.FindMissingExecutablesAsync(module.Toolchain, ct);
+        if (missingExecutables.Count > 0)
+            return new BuildResult(false, outputPath, BuildMissingToolchainError(module, missingExecutables));
 
         var generatedProjectPath = Path.Combine(_generatedProjectsRoot, serverName);
 
@@ -67,6 +74,16 @@ public class OrchestrationEngine
         return result.ExitCode == 0
             ? new BuildResult(true, outputPath, null)
             : new BuildResult(false, outputPath, result.StandardError);
+    }
+
+    private static string BuildMissingToolchainError(ILanguageModule module, IReadOnlyList<string> missingExecutables)
+    {
+        var toolLabel = missingExecutables.Count == 1 ? "tool" : "tools";
+        var missing = string.Join(", ", missingExecutables);
+        var required = string.Join(", ", module.Toolchain.RequiredExecutables);
+
+        return $"Missing required {toolLabel} for {module.Language}: {missing}. " +
+               $"The {module.Language} toolchain requires: {required}.";
     }
 
     private ILanguageModule DetectModule(string sourcePath)

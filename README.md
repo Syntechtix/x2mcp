@@ -30,10 +30,7 @@ builds it into a runnable server binary using that language's own toolchain.
 | Go | stdio, http | [docs/examples/go.md](docs/examples/go.md) |
 | Python | stdio, http | [docs/examples/python.md](docs/examples/python.md) |
 | Ruby | stdio | [docs/examples/ruby.md](docs/examples/ruby.md) |
-
-## Coming soon
-
-- Rust
+| Rust | stdio, http | [docs/examples/rust.md](docs/examples/rust.md) |
 
 ## Installation
 

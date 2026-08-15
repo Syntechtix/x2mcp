@@ -7,6 +7,7 @@ public sealed class FakeProcessRunner : IProcessRunner
 {
     public List<(string Executable, string Arguments, string WorkingDirectory)> Calls { get; } = [];
     public ProcessResult DefaultResult { get; init; } = new(0, string.Empty, string.Empty);
+    public Dictionary<string, ProcessResult> ResultsByExecutable { get; init; } = [];
 
     public Task<ProcessResult> RunAsync(
         string executable,
@@ -15,6 +16,7 @@ public sealed class FakeProcessRunner : IProcessRunner
         CancellationToken ct = default)
     {
         Calls.Add((executable, arguments, workingDirectory));
-        return Task.FromResult(DefaultResult);
+        var result = ResultsByExecutable.TryGetValue(executable, out var mapped) ? mapped : DefaultResult;
+        return Task.FromResult(result);
     }
 }
