@@ -207,6 +207,44 @@ public class GoScannerTests
     }
 
     [Fact]
+    public void IsExported_EmptyString_ReturnsFalse() =>
+        Assert.False(GoScanner.IsExported(""));
+
+    [Fact]
+    public void Scan_MethodWithPointerOnlyReceiver_Ignored()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("input.go").Returns(true);
+        fs.ReadAllText("input.go").Returns("""
+            package fixtures
+
+            func (c *) InvalidReceiver() int {
+                return 0
+            }
+            """);
+
+        var surface = new GoScanner(fs).Scan("input.go");
+        Assert.Empty(surface.Types);
+    }
+
+    [Fact]
+    public void Scan_ZeroParameterFunction_HasNoParameters()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("input.go").Returns(true);
+        fs.ReadAllText("input.go").Returns("""
+            package fixtures
+
+            func Ping() string {
+                return "pong"
+            }
+            """);
+
+        var surface = new GoScanner(fs).Scan("input.go");
+        Assert.Empty(surface.Types[0].Functions.Single(f => f.Name == "Ping").Parameters);
+    }
+
+    [Fact]
     public void Scan_MethodWithEmptyReceiver_Ignored()
     {
         var fs = Substitute.For<IFileSystem>();

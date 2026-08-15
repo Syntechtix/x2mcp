@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis.CSharp;
 using X2Mcp.Core.Abstractions;
 using X2Mcp.Language.DotNet;
 
@@ -216,5 +217,39 @@ public class RoslynScannerTests
         Assert.Equal("Calculator", surface.Types[0].Name);
         fs.DidNotReceive().ReadAllText("/src/bin/Generated.cs");
         fs.DidNotReceive().ReadAllText("/src/obj/Compiled.cs");
+    }
+
+    [Fact]
+    public void Constructor_NoFileSystemProvided_UsesRealFileSystem()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"x2mcp-roslyn-{Guid.NewGuid():N}.cs");
+        File.WriteAllText(path, "public class RealFsProbe { public int Ping() => 1; }");
+
+        try
+        {
+            var scanner = new RoslynScanner();
+            var surface = scanner.Scan(path);
+
+            Assert.Single(surface.Types);
+            Assert.Equal("RealFsProbe", surface.Types[0].Name);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void MapParameter_NullType_DefaultsToObject()
+    {
+        // Roslyn's own ParseText never leaves ParameterSyntax.Type null (even for malformed source
+        // it synthesizes an empty-but-non-null TypeSyntax), so the fallback is exercised directly
+        // via a hand-built node instead of trying to coax the parser into it.
+        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("value"));
+
+        var descriptor = RoslynScanner.MapParameter(parameter);
+
+        Assert.Equal("object", descriptor.Type);
+        Assert.Equal("value", descriptor.Name);
     }
 }

@@ -41,6 +41,19 @@ public class ProcessRunnerTests
     }
 
     [Fact]
+    public async Task RunAsync_ProcessWritesToStderr_CapturesStderrLine()
+    {
+        var runner = new ProcessRunner();
+        var (executable, arguments) = OperatingSystem.IsWindows()
+            ? ("cmd.exe", "/c echo stderr-line 1>&2")
+            : ("/bin/sh", "-c \"echo stderr-line 1>&2\"");
+
+        var result = await runner.RunAsync(executable, arguments, Path.GetTempPath());
+
+        Assert.Contains("stderr-line", result.StandardError);
+    }
+
+    [Fact]
     public async Task RunAsync_ExecutableNotOnPath_ReturnsFailureInsteadOfThrowing()
     {
         var runner = new ProcessRunner();

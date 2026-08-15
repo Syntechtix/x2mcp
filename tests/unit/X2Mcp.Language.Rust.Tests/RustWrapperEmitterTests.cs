@@ -68,6 +68,41 @@ public class RustWrapperEmitterTests
     }
 
     [Fact]
+    public void Emit_BinNameWithHyphenUnderscoreAndInvalidChar_SanitizesEachDifferently()
+    {
+        var fs = MakeSourceCrateFs();
+        var surface = MakeSurface(new TypeDescriptor("", "functions", []));
+        var context = MakeContext("/src", serverName: "1My-Name_Weird!Char");
+
+        var cargoToml = new RustWrapperEmitter(fs).Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "Cargo.toml").Content;
+
+        Assert.Contains("name = \"_1My-Name_Weird_Char\"", cargoToml);
+    }
+
+    [Fact]
+    public void Emit_MultipleFunctionsAcrossTypes_SeparatesGeneratedBlocksWithBlankLines()
+    {
+        var fs = MakeSourceCrateFs("mylib");
+        var surface = MakeSurface(
+            new TypeDescriptor("", "functions", [
+                new FunctionDescriptor("add", [], "i32", false),
+            ]),
+            new TypeDescriptor("", "Calculator", [
+                new FunctionDescriptor("multiply", [], "i32", false),
+            ]));
+        var context = MakeContext("/src");
+
+        var mainRs = new RustWrapperEmitter(fs).Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "src/main.rs").Content;
+
+        Assert.Contains("struct AddParams {", mainRs);
+        Assert.Contains("struct CalculatorMultiplyParams {", mainRs);
+        Assert.Contains("description = \"add\"", mainRs);
+        Assert.Contains("description = \"Calculator_multiply\"", mainRs);
+    }
+
+    [Fact]
     public void Emit_StdioTransport_GeneratesStdioSetupAndNoHttpDeps()
     {
         var fs = MakeSourceCrateFs();

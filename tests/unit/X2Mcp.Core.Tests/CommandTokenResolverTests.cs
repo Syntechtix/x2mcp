@@ -67,4 +67,18 @@ public class CommandTokenResolverTests
         const string template = "build {UnknownToken}";
         Assert.Equal(template, CommandTokenResolver.Resolve(template, Ctx()));
     }
+
+    [Fact]
+    public void Resolve_ExeSuffixToken_OnWindows_ResolvesToDotExe()
+    {
+        var resolved = CommandTokenResolver.Resolve("{ServerName}{ExeSuffix}", Ctx(name: "Srv"), isWindows: true);
+        Assert.Equal("Srv.exe", resolved);
+    }
+
+    [Fact]
+    public void Resolve_ExeSuffixToken_OnNonWindows_ResolvesToEmptyString()
+    {
+        var resolved = CommandTokenResolver.Resolve("{ServerName}{ExeSuffix}", Ctx(name: "Srv"), isWindows: false);
+        Assert.Equal("Srv", resolved);
+    }
 }

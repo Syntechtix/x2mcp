@@ -142,6 +142,43 @@ public class RubyWrapperEmitterTests
     }
 
     [Fact]
+    public void Emit_DirectoryInput_ExcludesTestSubdirectoryFiles()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src").Returns(false);
+        fs.DirectoryExists("/src").Returns(true);
+        fs.GetFiles("/src", "*.rb", SearchOption.AllDirectories).Returns([
+            "/src/lib.rb",
+            "/src/test/helper.rb",
+        ]);
+        fs.ReadAllText("/src/lib.rb").Returns("x = 1\n");
+
+        var surface = MakeSurface(new TypeDescriptor("lib", "lib", []));
+        var project = new RubyWrapperEmitter(fs).Emit(surface, MakeContext("/src"));
+
+        Assert.Contains(project.Files, f => f.RelativePath == "lib.rb");
+        Assert.DoesNotContain(project.Files, f => f.RelativePath == Path.Combine("test", "helper.rb"));
+    }
+
+    [Fact]
+    public void Emit_Server_OptionalParameter_MarksParametersLiteralOptionalTrue()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src/lib.rb").Returns(true);
+        fs.ReadAllText("/src/lib.rb").Returns("\n");
+
+        var surface = MakeSurface(new TypeDescriptor("lib", "lib", [
+            new FunctionDescriptor("greet", [new ParameterDescriptor("name", string.Empty, true)], string.Empty, false),
+        ]));
+
+        var server = new RubyWrapperEmitter(fs)
+            .Emit(surface, MakeContext("/src/lib.rb"))
+            .Files.Single(f => f.RelativePath == "server.rb").Content;
+
+        Assert.Contains("optional: true", server);
+    }
+
+    [Fact]
     public void Emit_ProjectPath_MatchesGeneratedProjectPath()
     {
         var fs = Substitute.For<IFileSystem>();

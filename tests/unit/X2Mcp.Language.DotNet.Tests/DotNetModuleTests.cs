@@ -1,4 +1,5 @@
 using Xunit;
+using X2Mcp.Core.Abstractions;
 using X2Mcp.Core.Models;
 using X2Mcp.Language.DotNet;
 
@@ -7,6 +8,16 @@ namespace X2Mcp.Language.DotNet.Tests;
 public class DotNetModuleTests
 {
     private readonly DotNetModule _module = new();
+
+    [Fact]
+    public void Constructor_WithProvidedFileSystem_UsesIt()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        var module = new DotNetModule(fs);
+
+        Assert.NotNull(module.Scanner);
+        Assert.NotNull(module.Emitter);
+    }
 
     [Fact]
     public void Language_IsCsharp() => Assert.Equal("csharp", _module.Language);

@@ -81,6 +81,47 @@ public class RubyScannerTests
         end
         """;
 
+    private const string NestedClassSource = """
+        class Outer
+          class Inner
+            def method(value)
+              value
+            end
+          end
+        end
+        """;
+
+    private const string LowercaseClassSource = """
+        class internal
+          def visible(value)
+            value
+          end
+        end
+        """;
+
+    private const string StrayEndSource = """
+        [1, 2].each do |x|
+        end
+
+        def visible(value)
+          value
+        end
+        """;
+
+    private const string HashInsideStringSource = """
+        def uses_hash(value)
+          x = "a#b"
+          value
+        end
+        """;
+
+    private const string HashInsideSingleQuotedStringSource = """
+        def uses_hash(value)
+          x = 'a#b'
+          value
+        end
+        """;
+
     private const string EdgeCasesSource = """
         text = 'def fake_single(a)\n  a\nend'
         other = "def fake_double(b)\nend"
@@ -249,6 +290,118 @@ public class RubyScannerTests
             .Scan("/src/public_functions.rb");
 
         Assert.Equal("/src/public_functions.rb", surface.SourcePath);
+    }
+
+    [Fact]
+    public void IsPublic_EmptyString_ReturnsFalse() =>
+        Assert.False(RubyScanner.IsPublic(""));
+
+    [Fact]
+    public void IsPublicClass_EmptyString_ReturnsFalse() =>
+        Assert.False(RubyScanner.IsPublicClass(""));
+
+    [Fact]
+    public void Scan_NestedClass_AttributesMethodToOuterClassAndDoesNotResetOnInnerEnd()
+    {
+        var surface = new RubyScanner(FileAt("/src/nested_class.rb", NestedClassSource))
+            .Scan("/src/nested_class.rb");
+
+        Assert.Single(surface.Types);
+        Assert.Equal("Outer", surface.Types[0].Name);
+        Assert.Single(surface.Types[0].Functions, f => f.Name == "method");
+    }
+
+    [Fact]
+    public void Scan_LowercaseClassName_MethodsAreExcluded()
+    {
+        var surface = new RubyScanner(FileAt("/src/lowercase_class.rb", LowercaseClassSource))
+            .Scan("/src/lowercase_class.rb");
+
+        Assert.Empty(surface.Types);
+    }
+
+    [Fact]
+    public void Scan_StrayEndOutsideClassOrMethod_IsIgnored()
+    {
+        var surface = new RubyScanner(FileAt("/src/stray_end.rb", StrayEndSource))
+            .Scan("/src/stray_end.rb");
+
+        Assert.Single(surface.Types);
+        Assert.Single(surface.Types[0].Functions);
+        Assert.Equal("visible", surface.Types[0].Functions[0].Name);
+    }
+
+    [Fact]
+    public void Scan_HashCharacterInsideString_DoesNotTruncateLine()
+    {
+        var surface = new RubyScanner(FileAt("/src/hash_in_string.rb", HashInsideStringSource))
+            .Scan("/src/hash_in_string.rb");
+
+        Assert.Single(surface.Types);
+        Assert.Single(surface.Types[0].Functions);
+        Assert.Equal("uses_hash", surface.Types[0].Functions[0].Name);
+    }
+
+    [Fact]
+    public void Scan_HashCharacterInsideSingleQuotedString_DoesNotTruncateLine()
+    {
+        var surface = new RubyScanner(FileAt("/src/hash_in_single.rb", HashInsideSingleQuotedStringSource))
+            .Scan("/src/hash_in_single.rb");
+
+        Assert.Single(surface.Types);
+        Assert.Single(surface.Types[0].Functions);
+        Assert.Equal("uses_hash", surface.Types[0].Functions[0].Name);
+    }
+
+    [Fact]
+    public void Scan_Directory_ExcludesSpecSubdirectoryFiles()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src").Returns(false);
+        fs.DirectoryExists("/src").Returns(true);
+        fs.GetFiles("/src", "*.rb", SearchOption.AllDirectories).Returns([
+            "/src/lib.rb",
+            "/src/spec/model_spec.rb",
+        ]);
+        fs.ReadAllText("/src/lib.rb").Returns("def real_method(v)\n  v\nend\n");
+
+        var surface = new RubyScanner(fs).Scan("/src");
+
+        fs.DidNotReceive().ReadAllText("/src/spec/model_spec.rb");
+        Assert.Single(surface.Types);
+        Assert.Contains(surface.Types[0].Functions, f => f.Name == "real_method");
+    }
+
+    [Fact]
+    public void Scan_Directory_ExcludesTestSubdirectoryFiles()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src").Returns(false);
+        fs.DirectoryExists("/src").Returns(true);
+        fs.GetFiles("/src", "*.rb", SearchOption.AllDirectories).Returns([
+            "/src/lib.rb",
+            "/src/test/helper.rb",
+        ]);
+        fs.ReadAllText("/src/lib.rb").Returns("def real_method(v)\n  v\nend\n");
+
+        var surface = new RubyScanner(fs).Scan("/src");
+
+        fs.DidNotReceive().ReadAllText("/src/test/helper.rb");
+        Assert.Single(surface.Types);
+        Assert.Contains(surface.Types[0].Functions, f => f.Name == "real_method");
+    }
+
+    [Fact]
+    public void Scan_EmptySourcePath_FallsBackToEmptyScanRoot()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("").Returns(false);
+        fs.DirectoryExists("").Returns(false);
+
+        var surface = new RubyScanner(fs).Scan("");
+
+        Assert.Empty(surface.Types);
+        Assert.Equal("", surface.SourcePath);
     }
 
     [Fact]

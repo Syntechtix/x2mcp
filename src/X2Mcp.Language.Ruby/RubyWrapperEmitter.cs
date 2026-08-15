@@ -56,8 +56,11 @@ public class RubyWrapperEmitter : IWrapperEmitter
         BuildContext context,
         IReadOnlyList<SourceMapping> sourceMappings)
     {
+        // ChangeExtension(path, null) only returns null for a null path; TargetRelativePath is
+        // never null, so the null-coalescing fallback here is unreachable and dropped in favor
+        // of the null-forgiving operator instead of faking a test for it.
         var requireLines = sourceMappings
-            .Select(mapping => Path.ChangeExtension(mapping.TargetRelativePath, null) ?? mapping.TargetRelativePath)
+            .Select(mapping => Path.ChangeExtension(mapping.TargetRelativePath, null)!)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(path => path, StringComparer.Ordinal)
             .Select(path => path

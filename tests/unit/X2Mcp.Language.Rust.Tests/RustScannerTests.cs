@@ -133,6 +133,37 @@ public class RustScannerTests
     }
 
     [Fact]
+    public void Scan_SrcMainRs_MapsToRootModule()
+    {
+        var fileSystem = Substitute.For<IFileSystem>();
+        fileSystem.DirectoryExists("/crate").Returns(true);
+        fileSystem.GetFiles("/crate", "*.rs", SearchOption.AllDirectories).Returns(["/crate/src/main.rs"]);
+        fileSystem.ReadAllText("/crate/src/main.rs").Returns("pub fn add(a: i32, b: i32) -> i32 {\n    a + b\n}\n");
+
+        var surface = new RustScanner(fileSystem).Scan("/crate");
+
+        Assert.Single(surface.Types);
+        Assert.Equal("", surface.Types[0].Namespace);
+    }
+
+    [Fact]
+    public void Scan_FileNotEndingInRsExtension_ModulePathKeepsFullRelativePath()
+    {
+        // Contrived but constructible via a mocked directory listing: exercises the branch where a
+        // returned path doesn't end in ".rs" (the real filesystem's "*.rs" glob always guarantees
+        // this, but the mock isn't bound by that).
+        var fileSystem = Substitute.For<IFileSystem>();
+        fileSystem.DirectoryExists("/crate").Returns(true);
+        fileSystem.GetFiles("/crate", "*.rs", SearchOption.AllDirectories).Returns(["/crate/src/weird_no_ext"]);
+        fileSystem.ReadAllText("/crate/src/weird_no_ext").Returns("pub fn add(a: i32, b: i32) -> i32 {\n    a + b\n}\n");
+
+        var surface = new RustScanner(fileSystem).Scan("/crate");
+
+        Assert.Single(surface.Types);
+        Assert.Equal("weird_no_ext", surface.Types[0].Namespace);
+    }
+
+    [Fact]
     public void Scan_SrcLibRs_MapsToRootModule()
     {
         var fileSystem = Substitute.For<IFileSystem>();
@@ -214,6 +245,70 @@ public class RustScannerTests
 
         var widget = surface.Types.Single();
         Assert.All(widget.Functions, f => Assert.Single(f.Parameters));
+    }
+
+    [Fact]
+    public void Scan_FreeFunctionAfterImplBlock_IsNotTreatedAsWithinSpan()
+    {
+        var fileSystem = Substitute.For<IFileSystem>();
+        var sourcePath = "input.rs";
+        fileSystem.FileExists(sourcePath).Returns(true);
+        fileSystem.ReadAllText(sourcePath).Returns(
+            """
+            pub struct Widget;
+
+            impl Widget {
+                pub fn method(&self) -> i32 { 1 }
+            }
+
+            pub fn after_impl() -> i32 { 2 }
+            """);
+
+        var surface = new RustScanner(fileSystem).Scan(sourcePath);
+
+        var functionsType = surface.Types.Single(t => t.Name == "functions");
+        Assert.Single(functionsType.Functions);
+        Assert.Equal("after_impl", functionsType.Functions[0].Name);
+    }
+
+    [Fact]
+    public void Scan_FreeFunctionBeforeImplBlock_IsNotTreatedAsWithinSpan()
+    {
+        var fileSystem = Substitute.For<IFileSystem>();
+        var sourcePath = "input.rs";
+        fileSystem.FileExists(sourcePath).Returns(true);
+        fileSystem.ReadAllText(sourcePath).Returns(
+            """
+            pub fn before_impl() -> i32 { 2 }
+
+            pub struct Widget;
+
+            impl Widget {
+                pub fn method(&self) -> i32 { 1 }
+            }
+            """);
+
+        var surface = new RustScanner(fileSystem).Scan(sourcePath);
+
+        var functionsType = surface.Types.Single(t => t.Name == "functions");
+        Assert.Single(functionsType.Functions);
+        Assert.Equal("before_impl", functionsType.Functions[0].Name);
+    }
+
+    [Fact]
+    public void Scan_ParameterWithCommaNestedInsideGenericType_DoesNotSplitOnNestedComma()
+    {
+        var fileSystem = Substitute.For<IFileSystem>();
+        var sourcePath = "input.rs";
+        fileSystem.FileExists(sourcePath).Returns(true);
+        fileSystem.ReadAllText(sourcePath).Returns(
+            "pub fn pair(a: std::collections::HashMap<String, i32>) -> i32 { 0 }\n");
+
+        var surface = new RustScanner(fileSystem).Scan(sourcePath);
+
+        var pair = surface.Types.Single().Functions.Single();
+        Assert.Single(pair.Parameters);
+        Assert.Equal("a", pair.Parameters[0].Name);
     }
 
     [Fact]

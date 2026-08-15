@@ -200,18 +200,19 @@ public partial class RustScanner : IScanner
 
         for (var i = 0; i < s.Length; i++)
         {
-            switch (s[i])
+            var ch = s[i];
+            if (IsOpenBracket(ch))
             {
-                case '<' or '(' or '[':
-                    depth++;
-                    break;
-                case '>' or ')' or ']':
-                    depth--;
-                    break;
-                case ',' when depth == 0:
-                    parts.Add(s[start..i].Trim());
-                    start = i + 1;
-                    break;
+                depth++;
+            }
+            else if (IsCloseBracket(ch))
+            {
+                depth--;
+            }
+            else if (ch == ',' && depth == 0)
+            {
+                parts.Add(s[start..i].Trim());
+                start = i + 1;
             }
         }
 
@@ -220,6 +221,10 @@ public partial class RustScanner : IScanner
 
         return parts;
     }
+
+    private static bool IsOpenBracket(char ch) => "<([".IndexOf(ch) >= 0;
+
+    private static bool IsCloseBracket(char ch) => ">)]".IndexOf(ch) >= 0;
 
     private readonly record struct ImplSpan(string StructName, int BodyStart, int BodyEnd);
 

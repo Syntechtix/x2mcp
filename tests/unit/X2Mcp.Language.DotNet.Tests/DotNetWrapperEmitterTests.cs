@@ -147,6 +147,23 @@ public class DotNetWrapperEmitterTests : IDisposable
     }
 
     [Fact]
+    public void Emit_TypeWithMultipleMethods_SeparatesMethodsWithBlankLine()
+    {
+        var surface = MakeSurface(
+            new TypeDescriptor("Lib", "Calculator", [
+                new FunctionDescriptor("Add", [], "int", false),
+                new FunctionDescriptor("Subtract", [], "int", false),
+            ]));
+        var context = MakeContext(Path.Combine(_tempDir, "FakeSource"));
+
+        var toolsCs = new DotNetWrapperEmitter().Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "CalculatorTools.cs").Content;
+
+        Assert.Contains("Add", toolsCs);
+        Assert.Contains("Subtract", toolsCs);
+    }
+
+    [Fact]
     public void Emit_MultipleTypes_GeneratesOneToolsFilePerType()
     {
         var surface = MakeSurface(

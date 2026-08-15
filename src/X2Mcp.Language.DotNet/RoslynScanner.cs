@@ -55,12 +55,7 @@ public class RoslynScanner : IScanner
                     .Where(m => m.Modifiers.Any(mod => mod.IsKind(SyntaxKind.PublicKeyword)))
                     .Select(m => new FunctionDescriptor(
                         Name: m.Identifier.Text,
-                        Parameters: m.ParameterList.Parameters
-                            .Select(p => new ParameterDescriptor(
-                                Name: p.Identifier.Text,
-                                Type: p.Type?.ToString() ?? "object",
-                                IsOptional: p.Default != null))
-                            .ToList(),
+                        Parameters: m.ParameterList.Parameters.Select(MapParameter).ToList(),
                         ReturnType: m.ReturnType.ToString(),
                         IsAsync: m.Modifiers.Any(mod => mod.IsKind(SyntaxKind.AsyncKeyword))
                             || m.ReturnType.ToString().StartsWith("Task", StringComparison.Ordinal)))
@@ -73,6 +68,15 @@ public class RoslynScanner : IScanner
 
         return new ScannedSurface(sourcePath, "csharp", types);
     }
+
+    // Extracted so the p.Type == null fallback (which the C# parser never actually produces from
+    // ParseText, even for malformed source — it always synthesizes an empty-but-non-null TypeSyntax)
+    // can still be exercised directly with a hand-built ParameterSyntax in a unit test.
+    public static ParameterDescriptor MapParameter(ParameterSyntax p) =>
+        new(
+            Name: p.Identifier.Text,
+            Type: p.Type?.ToString() ?? "object",
+            IsOptional: p.Default != null);
 
     private static string GetNamespace(SyntaxNode node)
     {

@@ -19,4 +19,12 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/X2Mcp.Core/X2Mcp.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fixtures/NullConfig.json">
+      <LogicalName>X2Mcp.Core.Tests.NullConfig.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Fixtures/ValidConfig.json">
+      <LogicalName>X2Mcp.Core.Tests.ValidConfig.json</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

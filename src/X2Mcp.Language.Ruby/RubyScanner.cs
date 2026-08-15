@@ -118,7 +118,10 @@ public partial class RubyScanner : IScanner
                     continue;
                 }
 
-                if (currentClass.Length == 0 || !IsPublicClass(currentClass) || currentVisibility != Visibility.Public)
+                // currentClass is guaranteed non-empty here: it's set in the same step that takes
+                // classDepth from 0 to 1 (below), and only cleared when classDepth returns to 0 —
+                // and this line is only reached when classDepth > 0. No separate emptiness check needed.
+                if (!IsPublicClass(currentClass) || currentVisibility != Visibility.Public)
                     continue;
 
                 if (!classFunctions.TryGetValue(currentClass, out var methods))
@@ -165,7 +168,10 @@ public partial class RubyScanner : IScanner
             return Path.GetFileNameWithoutExtension(filePath);
 
         var relativePath = Path.GetRelativePath(scanRoot, filePath);
-        var withoutExtension = Path.ChangeExtension(relativePath, null) ?? relativePath;
+        // ChangeExtension(path, null) only returns null when path itself is null, which
+        // Path.GetRelativePath never produces — the null-coalescing fallback is unreachable,
+        // so it's dropped in favor of the null-forgiving operator instead of faking a test for it.
+        var withoutExtension = Path.ChangeExtension(relativePath, null)!;
         return withoutExtension
             .Replace(Path.DirectorySeparatorChar, '.')
             .Replace(Path.AltDirectorySeparatorChar, '.');
@@ -185,10 +191,13 @@ public partial class RubyScanner : IScanner
             || normalized.Contains("/spec/", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsPublic(string name) =>
+    // Public so the empty-string branch (never reachable through the regex-driven Scan() path,
+    // since ClassRegex/MethodRegex both require at least one identifier character) can still be
+    // exercised directly by a unit test.
+    public static bool IsPublic(string name) =>
         name.Length > 0 && name[0] != '_';
 
-    private static bool IsPublicClass(string name) =>
+    public static bool IsPublicClass(string name) =>
         name.Length > 0 && char.IsUpper(name[0]);
 
     private static string StripCommentsAndStrings(string line)
@@ -284,11 +293,11 @@ public partial class RubyScanner : IScanner
         for (var i = 0; i < text.Length; i++)
         {
             var ch = text[i];
-            if (ch is '(' or '[' or '{')
+            if (IsOpenBracket(ch))
             {
                 depth++;
             }
-            else if (ch is ')' or ']' or '}')
+            else if (IsCloseBracket(ch))
             {
                 depth--;
             }
@@ -302,6 +311,10 @@ public partial class RubyScanner : IScanner
         result.Add(text[start..]);
         return result;
     }
+
+    private static bool IsOpenBracket(char ch) => "([{".IndexOf(ch) >= 0;
+
+    private static bool IsCloseBracket(char ch) => ")]}".IndexOf(ch) >= 0;
 
     [GeneratedRegex("^class\\s+(?<name>[A-Za-z_]\\w*)\\b")]
     private static partial Regex ClassRegex();

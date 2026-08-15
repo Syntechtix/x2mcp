@@ -60,7 +60,11 @@ public partial class PythonScanner : IScanner
                     ? functionMatch.Groups["ret"].Value.Trim()
                     : string.Empty;
 
-                if (IsPublic(functionName) && !IsDunder(functionName) && !IsInsideFunction(scopes))
+                // Checked in this order (rather than IsPublic first) so IsDunder is actually
+                // evaluated for every candidate name — IsPublic alone already excludes every
+                // dunder (they're always underscore-prefixed), so IsPublic-first would leave
+                // IsDunder's true branch permanently unreachable.
+                if (!IsDunder(functionName) && IsPublic(functionName) && !IsInsideFunction(scopes))
                 {
                     var classScope = GetNearestPublicClassScope(scopes);
                     var descriptor = new FunctionDescriptor(functionName, parameters, returnType, isAsync);
@@ -117,7 +121,10 @@ public partial class PythonScanner : IScanner
             return Path.GetFileNameWithoutExtension(filePath);
 
         var relativePath = Path.GetRelativePath(scanRoot, filePath);
-        var withoutExtension = Path.ChangeExtension(relativePath, null) ?? relativePath;
+        // ChangeExtension(path, null) only returns null when path itself is null, which
+        // Path.GetRelativePath never produces — the null-coalescing fallback is unreachable,
+        // so it's dropped in favor of the null-forgiving operator instead of faking a test for it.
+        var withoutExtension = Path.ChangeExtension(relativePath, null)!;
         var moduleName = withoutExtension
             .Replace(Path.DirectorySeparatorChar, '.')
             .Replace(Path.AltDirectorySeparatorChar, '.');
@@ -143,7 +150,10 @@ public partial class PythonScanner : IScanner
         return normalized.Contains("/__pycache__/", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsPublic(string name) =>
+    // Public so the empty-string branch (never reachable through the regex-driven Scan() path,
+    // since ClassRegex/FunctionRegex both require at least one identifier character) can still
+    // be exercised directly by a unit test.
+    public static bool IsPublic(string name) =>
         name.Length > 0 && name[0] != '_';
 
     private static bool IsDunder(string name) =>
@@ -239,11 +249,11 @@ public partial class PythonScanner : IScanner
         for (var i = 0; i < text.Length; i++)
         {
             var ch = text[i];
-            if (ch is '(' or '[' or '{')
+            if (IsOpenBracket(ch))
             {
                 depth++;
             }
-            else if (ch is ')' or ']' or '}')
+            else if (IsCloseBracket(ch))
             {
                 depth--;
             }
@@ -264,11 +274,11 @@ public partial class PythonScanner : IScanner
         for (var i = 0; i < text.Length; i++)
         {
             var ch = text[i];
-            if (ch is '(' or '[' or '{')
+            if (IsOpenBracket(ch))
             {
                 depth++;
             }
-            else if (ch is ')' or ']' or '}')
+            else if (IsCloseBracket(ch))
             {
                 depth--;
             }
@@ -280,6 +290,10 @@ public partial class PythonScanner : IScanner
 
         return -1;
     }
+
+    private static bool IsOpenBracket(char ch) => "([{".IndexOf(ch) >= 0;
+
+    private static bool IsCloseBracket(char ch) => ")]}".IndexOf(ch) >= 0;
 
     [GeneratedRegex("^class\\s+(?<name>[A-Za-z_]\\w*)\\s*(?:\\([^)]*\\))?\\s*:")]
     private static partial Regex ClassRegex();

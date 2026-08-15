@@ -351,6 +351,79 @@ public class GoWrapperEmitterTests
     }
 
     [Fact]
+    public void Emit_TwoDifferentReceiverTypes_GeneratesBothInstancesOnSeparateLines()
+    {
+        var fs = MakeSourceModuleFs();
+        var surface = MakeSurface(
+            new TypeDescriptor("fixtures", "Calculator", [
+                new FunctionDescriptor("Add", [], "int", false),
+            ]),
+            new TypeDescriptor("fixtures", "Logger", [
+                new FunctionDescriptor("Log", [], "", false),
+            ]));
+        var context = MakeContext("/src");
+
+        var mainGo = new GoWrapperEmitter(fs).Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "main.go").Content;
+
+        Assert.Contains("new(srcpkg.Calculator)", mainGo);
+        Assert.Contains("new(srcpkg.Logger)", mainGo);
+    }
+
+    [Fact]
+    public void Emit_ReturnTypeStartsWithParenButDoesNotEndWithOne_TreatedAsValueOnly()
+    {
+        // Realistic source: a trailing comment after the closing paren but before the function's
+        // opening brace (e.g. `func F() (int) // note {`) leaves the captured return type ending
+        // in the comment text rather than ')'.
+        var fs = MakeSourceModuleFs();
+        var surface = MakeSurface(new TypeDescriptor("", "fixtures", [
+            new FunctionDescriptor("Annotated", [], "(int) // note", false),
+        ]));
+        var context = MakeContext("/src");
+
+        var mainGo = new GoWrapperEmitter(fs).Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "main.go").Content;
+
+        Assert.Contains("result := srcpkg.Annotated()", mainGo);
+        Assert.Contains("return nil, result, nil", mainGo);
+    }
+
+    [Fact]
+    public void Emit_ReturnTypeWithCommaNestedInsideBrackets_DoesNotSplitOnNestedComma()
+    {
+        var fs = MakeSourceModuleFs();
+        var surface = MakeSurface(new TypeDescriptor("", "fixtures", [
+            new FunctionDescriptor("Lookup", [], "(Pair[int, string], error)", false),
+        ]));
+        var context = MakeContext("/src");
+
+        var mainGo = new GoWrapperEmitter(fs).Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "main.go").Content;
+
+        Assert.Contains("result, err := srcpkg.Lookup()", mainGo);
+        Assert.Contains("return nil, result, nil", mainGo);
+        Assert.Contains("return nil, nil, err", mainGo);
+    }
+
+    [Fact]
+    public void Emit_ReturnTypeWithCommaNestedInsideParens_DoesNotSplitOnNestedComma()
+    {
+        var fs = MakeSourceModuleFs();
+        var surface = MakeSurface(new TypeDescriptor("", "fixtures", [
+            new FunctionDescriptor("Apply", [], "(func(int, int) int, error)", false),
+        ]));
+        var context = MakeContext("/src");
+
+        var mainGo = new GoWrapperEmitter(fs).Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "main.go").Content;
+
+        Assert.Contains("result, err := srcpkg.Apply()", mainGo);
+        Assert.Contains("return nil, result, nil", mainGo);
+        Assert.Contains("return nil, nil, err", mainGo);
+    }
+
+    [Fact]
     public void Emit_NoSourceModuleFound_ThrowsInvalidOperationException()
     {
         var fs = Substitute.For<IFileSystem>();

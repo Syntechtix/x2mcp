@@ -69,6 +69,44 @@ public class PythonScannerTests
             return value
         """;
 
+    private const string CommentAndBlankLinesSource = """
+        # a leading module comment
+        def add(a: int, b: int) -> int:
+            # a comment inside the function body
+            return a + b
+        """;
+
+    private const string NestedClassSource = """
+        def outer(value: int) -> int:
+            class Inner:
+                def method(self) -> int:
+                    return 0
+
+            return value
+        """;
+
+    private const string NoReturnAnnotationSource = """
+        def untyped(value):
+            return value
+        """;
+
+    private const string WeirdDunderLikeSource = """
+        class Widget:
+            def __weird(self, value: int) -> int:
+                return value
+        """;
+
+    private const string PrivateClassSource = """
+        class _Internal:
+            def method(self) -> int:
+                return 0
+        """;
+
+    private const string CurlyBraceBeforeEqualsSource = """
+        def brace_param(weird{brace}: int = 1) -> int:
+            return weird
+        """;
+
     private static IFileSystem FileAt(string path, string content)
     {
         var fs = Substitute.For<IFileSystem>();
@@ -287,5 +325,101 @@ public class PythonScannerTests
             .Scan("/src/public_functions.py");
 
         Assert.Equal("/src/public_functions.py", surface.SourcePath);
+    }
+
+    [Fact]
+    public void IsPublic_EmptyString_ReturnsFalse() =>
+        Assert.False(PythonScanner.IsPublic(""));
+
+    [Fact]
+    public void Scan_CommentLines_AreSkipped()
+    {
+        var surface = new PythonScanner(FileAt("/src/comments.py", CommentAndBlankLinesSource))
+            .Scan("/src/comments.py");
+
+        Assert.Single(surface.Types);
+        Assert.Single(surface.Types[0].Functions);
+        Assert.Equal("add", surface.Types[0].Functions[0].Name);
+    }
+
+    [Fact]
+    public void Scan_ClassDeclaredInsideFunction_IsNotTreatedAsTopLevel()
+    {
+        var surface = new PythonScanner(FileAt("/src/nested_class.py", NestedClassSource))
+            .Scan("/src/nested_class.py");
+
+        Assert.Single(surface.Types);
+        Assert.Single(surface.Types[0].Functions);
+        Assert.Equal("outer", surface.Types[0].Functions[0].Name);
+    }
+
+    [Fact]
+    public void Scan_FunctionWithoutReturnAnnotation_HasEmptyReturnType()
+    {
+        var surface = new PythonScanner(FileAt("/src/untyped.py", NoReturnAnnotationSource))
+            .Scan("/src/untyped.py");
+
+        Assert.Equal("", surface.Types[0].Functions.Single(f => f.Name == "untyped").ReturnType);
+    }
+
+    [Fact]
+    public void Scan_MethodStartsWithButDoesNotEndWithDunderMarkers_IsStillExcludedViaIsPublic()
+    {
+        var surface = new PythonScanner(FileAt("/src/weird.py", WeirdDunderLikeSource))
+            .Scan("/src/weird.py");
+
+        Assert.Empty(surface.Types);
+    }
+
+    [Fact]
+    public void Scan_EmptySourcePath_FallsBackToEmptyScanRoot()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("").Returns(false);
+        fs.DirectoryExists("").Returns(false);
+
+        var surface = new PythonScanner(fs).Scan("");
+
+        Assert.Empty(surface.Types);
+        Assert.Equal("", surface.SourcePath);
+    }
+
+    [Fact]
+    public void Scan_PrivateClassName_ShortCircuitsBeforeCheckingScopeDepth()
+    {
+        var surface = new PythonScanner(FileAt("/src/private_class.py", PrivateClassSource))
+            .Scan("/src/private_class.py");
+
+        Assert.Single(surface.Types);
+        Assert.Equal("private_class", surface.Types[0].Name);
+        Assert.Contains(surface.Types[0].Functions, f => f.Name == "method");
+    }
+
+    [Fact]
+    public void Scan_CurlyBraceBeforeEquals_IsTrackedAsDepthInTopLevelScans()
+    {
+        var surface = new PythonScanner(FileAt("/src/brace.py", CurlyBraceBeforeEqualsSource))
+            .Scan("/src/brace.py");
+
+        var param = surface.Types[0].Functions.Single(f => f.Name == "brace_param").Parameters.Single();
+        Assert.Equal("weird{brace}", param.Name);
+        Assert.True(param.IsOptional);
+    }
+
+    [Fact]
+    public void Scan_DirectoryListingIncludesScanRootItself_FallsBackToFileNameForModuleName()
+    {
+        // Contrived but constructible: exercises the moduleName.Length == 0 fallback, which fires
+        // when the relative path collapses to "." (i.e. the "file" found equals the scan root).
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src").Returns(false);
+        fs.DirectoryExists("/src").Returns(true);
+        fs.GetFiles("/src", "*.py", SearchOption.AllDirectories).Returns(["/src"]);
+        fs.ReadAllText("/src").Returns(PublicFunctionsSource);
+
+        var surface = new PythonScanner(fs).Scan("/src");
+
+        Assert.Single(surface.Types);
+        Assert.Equal("src", surface.Types[0].Namespace);
     }
 }

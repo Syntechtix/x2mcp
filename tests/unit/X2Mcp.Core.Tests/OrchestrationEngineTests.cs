@@ -159,6 +159,29 @@ public class OrchestrationEngineTests : IDisposable
             messages);
     }
 
+    [Fact]
+    public async Task RunAsync_NoGeneratedProjectsRootProvided_DefaultsToSystemTempX2Mcp()
+    {
+        var sourceDir = CreateSourceDir("src10", ".stub");
+        var fake = new FakeProcessRunner();
+        var serverName = $"DefaultRootSvr-{Guid.NewGuid():N}";
+        var engine = new OrchestrationEngine([new StubLanguageModule(".stub")], fake);
+        var expectedGenDir = Path.Combine(Path.GetTempPath(), "x2mcp", serverName);
+
+        try
+        {
+            var result = await engine.RunAsync(sourceDir, Path.Combine(_tempDir, "out10"), serverName, Transport.Stdio);
+
+            Assert.True(result.Success);
+            Assert.True(Directory.Exists(expectedGenDir));
+        }
+        finally
+        {
+            if (Directory.Exists(expectedGenDir))
+                Directory.Delete(expectedGenDir, recursive: true);
+        }
+    }
+
     private string CreateSourceDir(string name, string ext)
     {
         var dir = Path.Combine(_tempDir, name);

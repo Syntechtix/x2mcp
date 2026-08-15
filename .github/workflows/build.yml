@@ -50,14 +50,24 @@ jobs:
       - name: Publish Coverage Summary
         run: cat coveragereport/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Enforce Full Line Coverage
+      - name: Enforce Full Line And Branch Coverage
         run: |
-          coverage=$(grep -oP '(?<=<coverage line-rate=")[^"]+' coveragereport/Cobertura.xml | head -1)
-          percent=$(awk -v c="$coverage" 'BEGIN { printf "%.2f", c * 100 }')
-          echo "Line coverage: ${percent}%"
-          below=$(awk -v c="$coverage" 'BEGIN { print (c < 1) ? "1" : "0" }')
-          if [ "$below" = "1" ]; then
-            echo "Line coverage is ${percent}%, which is below the required 100%."
+          line_coverage=$(grep -oP '(?<=<coverage line-rate=")[^"]+' coveragereport/Cobertura.xml | head -1)
+          branch_coverage=$(grep -oP '(?<=branch-rate=")[^"]+' coveragereport/Cobertura.xml | head -1)
+          line_percent=$(awk -v c="$line_coverage" 'BEGIN { printf "%.2f", c * 100 }')
+          branch_percent=$(awk -v c="$branch_coverage" 'BEGIN { printf "%.2f", c * 100 }')
+          echo "Line coverage: ${line_percent}%"
+          echo "Branch coverage: ${branch_percent}%"
+          failed=0
+          if [ "$(awk -v c="$line_coverage" 'BEGIN { print (c < 1) ? "1" : "0" }')" = "1" ]; then
+            echo "Line coverage is ${line_percent}%, which is below the required 100%."
+            failed=1
+          fi
+          if [ "$(awk -v c="$branch_coverage" 'BEGIN { print (c < 1) ? "1" : "0" }')" = "1" ]; then
+            echo "Branch coverage is ${branch_percent}%, which is below the required 100%."
+            failed=1
+          fi
+          if [ "$failed" = "1" ]; then
             exit 1
           fi
 

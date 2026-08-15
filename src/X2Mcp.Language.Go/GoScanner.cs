@@ -91,7 +91,10 @@ public partial class GoScanner : IScanner
         return [];
     }
 
-    private static bool IsExported(string name) =>
+    // Public so the empty-string branch (never reachable through the regex-driven Scan() path,
+    // since both FunctionRegex and MethodRegex require at least one identifier character) can
+    // still be exercised directly by a unit test.
+    public static bool IsExported(string name) =>
         name.Length > 0 && char.IsUpper(name[0]);
 
     private static string? ExtractReceiverType(string receiverRaw)

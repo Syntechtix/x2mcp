@@ -1,0 +1,7 @@
+{
+  "requiredExecutables": ["tool"],
+  "buildCommand": "build",
+  "publishCommand": "publish",
+  "supportedTransports": ["Stdio"],
+  "sourceExtensions": [".tool"]
+}

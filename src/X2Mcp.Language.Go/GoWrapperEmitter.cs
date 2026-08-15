@@ -262,22 +262,25 @@ public class GoWrapperEmitter : IWrapperEmitter
         var parts = new List<string>();
         var depth = 0;
         var start = 0;
+
         for (var i = 0; i < s.Length; i++)
         {
-            switch (s[i])
+            var ch = s[i];
+            if (ch == '(' || ch == '[')
             {
-                case '(' or '[':
-                    depth++;
-                    break;
-                case ')' or ']':
-                    depth--;
-                    break;
-                case ',' when depth == 0:
-                    parts.Add(s[start..i].Trim());
-                    start = i + 1;
-                    break;
+                depth++;
+            }
+            else if (ch == ')' || ch == ']')
+            {
+                depth--;
+            }
+            else if (ch == ',' && depth == 0)
+            {
+                parts.Add(s[start..i].Trim());
+                start = i + 1;
             }
         }
+
         parts.Add(s[start..].Trim());
         return parts;
     }
