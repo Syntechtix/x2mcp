@@ -47,7 +47,7 @@ public class DotNetEndToEndTests : IDisposable
         Assert.True(result.Success, $"Build failed: {result.Error}");
         Assert.True(Directory.Exists(outputDir), "Output directory was not created.");
 
-        var binaryName = OperatingSystem.IsWindows() ? "McpServer.exe" : "McpServer";
+        var binaryName = OperatingSystem.IsWindows() ? "DotNetSampleLib.exe" : "DotNetSampleLib";
         Assert.True(
             File.Exists(Path.Combine(outputDir, binaryName)),
             $"Binary not found at {Path.Combine(outputDir, binaryName)}");

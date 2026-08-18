@@ -1,7 +1,7 @@
 {
   "requiredExecutables": ["dotnet"],
-  "buildCommand": "build {GeneratedProjectPath} -c Release",
-  "publishCommand": "publish {GeneratedProjectPath} -c Release -o {OutputPath} --self-contained",
+  "buildCommand": "build {GeneratedProjectPath}/{ServerName}.csproj -c Release",
+  "publishCommand": "publish {GeneratedProjectPath}/{ServerName}.csproj -c Release -o {OutputPath} --self-contained",
   "supportedTransports": ["Stdio", "StreamableHttp"],
   "sourceExtensions": [".cs", ".csproj"]
 }

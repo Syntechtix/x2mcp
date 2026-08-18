@@ -2,7 +2,7 @@
 
 ## How scanning works
 
-`x2mcp` always produces a single MCP server from whatever source you give it.
+`x2mcp` produces a single MCP server from whatever source you give it.
 
 - **Directory** (recommended) — recursively scans all `.py` files in the directory
   and every subfolder. All discovered top-level functions and class methods are
@@ -47,10 +47,10 @@ Point at the directory (whole module) or a single file:
 
 ```bash
 # recommended: whole module directory
-x2mcp ./calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 
 # or: a single file
-x2mcp ./calculator.py --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator.py --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
 ## 3. What gets generated

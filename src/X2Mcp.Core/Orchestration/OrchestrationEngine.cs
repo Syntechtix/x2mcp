@@ -73,7 +73,10 @@ public class OrchestrationEngine
 
         return result.ExitCode == 0
             ? new BuildResult(true, outputPath, null)
-            : new BuildResult(false, outputPath, result.StandardError);
+            : new BuildResult(
+                false,
+                outputPath,
+                string.IsNullOrWhiteSpace(result.StandardError) ? result.StandardOutput : result.StandardError);
     }
 
     private static string BuildMissingToolchainError(ILanguageModule module, IReadOnlyList<string> missingExecutables)

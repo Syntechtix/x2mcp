@@ -41,7 +41,7 @@ public class DotNetWrapperEmitterTests : IDisposable
         var project = new DotNetWrapperEmitter().Emit(surface, context);
 
         Assert.Equal(3, project.Files.Count); // csproj + Program.cs + CalculatorTools.cs
-        Assert.Single(project.Files, f => f.RelativePath == "McpServer.csproj");
+        Assert.Single(project.Files, f => f.RelativePath == "TestServer.csproj");
         Assert.Single(project.Files, f => f.RelativePath == "Program.cs");
         Assert.Single(project.Files, f => f.RelativePath == "CalculatorTools.cs");
     }
@@ -53,12 +53,16 @@ public class DotNetWrapperEmitterTests : IDisposable
         var context = MakeContext(Path.Combine(_tempDir, "FakeSource"));
 
         var project = new DotNetWrapperEmitter().Emit(surface, context);
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
 
         Assert.Contains("net10.0", csproj);
         Assert.Contains("ModelContextProtocol", csproj);
         Assert.Contains("ProjectReference", csproj);
         Assert.Contains("Microsoft.NET.Sdk", csproj);
+        Assert.Contains("<AssemblyName>TestServer.mcp</AssemblyName>", csproj);
+        Assert.Contains("<ServerExecutableExtension Condition=\"'$(OS)' == 'Windows_NT'\">.exe</ServerExecutableExtension>", csproj);
+        Assert.Contains("CreateServerLauncher", csproj);
+        Assert.Contains("$(PublishDir)TestServer$(ServerExecutableExtension)", csproj);
     }
 
     [Fact]
@@ -83,7 +87,7 @@ public class DotNetWrapperEmitterTests : IDisposable
 
         var project = new DotNetWrapperEmitter().Emit(surface, context);
         var programCs = project.Files.Single(f => f.RelativePath == "Program.cs").Content;
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
 
         Assert.Contains("MapMcp", programCs);
         Assert.Contains("WithHttpTransport", programCs);

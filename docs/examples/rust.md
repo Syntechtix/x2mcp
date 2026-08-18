@@ -7,7 +7,7 @@ functions as MCP tools.
 
 ## How scanning works
 
-`x2mcp` always produces a single MCP server from whatever source you give it.
+`x2mcp` produces a single MCP server from whatever source you give it.
 
 - **Directory** (recommended) — recursively scans all `.rs` files in the directory
   and every subfolder. This is the normal way to wrap a whole crate.
@@ -84,13 +84,13 @@ Point at the crate directory (whole crate) or a single file:
 
 ```bash
 # recommended: whole crate directory
-x2mcp ./calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 
 # or: a single file
-x2mcp ./calculator/src/lib.rs --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator/src/lib.rs --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
-- `--out` — where the built, runnable MCP server binary ends up
+- `--out-dir` — where the built, runnable MCP server binary ends up
 - `--name` — the server name (also used for the generated project's temp folder,
   and sanitized into the generated crate/binary name)
 - `--transport` — `stdio` (default) or `http`
@@ -182,7 +182,7 @@ their side effect and return `"ok"`.
 ## 4. Build
 
 `x2mcp` then runs `cargo install` for you, which builds in release mode and places
-the binary directly in `--out`:
+the binary directly in `--out-dir`:
 
 ```bash
 cargo install --path <generated-project> --root ./dist/calculator-mcp --force

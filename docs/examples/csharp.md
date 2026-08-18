@@ -6,7 +6,7 @@ that references your original code and exposes those methods as MCP tools.
 
 ## How scanning works
 
-`x2mcp` always produces a single MCP server from whatever source you give it.
+`x2mcp` produces a single MCP server from whatever source you give it.
 
 - **`.csproj` file** (recommended) — scans all `.cs` files in the project directory
   and every subfolder, excluding `bin/` and `obj/`. This is the most reliable input
@@ -58,17 +58,17 @@ Point at the `.csproj` file, the directory, or a single file — all three work:
 
 ```powershell
 # recommended: project file
-x2mcp ./Calculator/Calculator.csproj --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./Calculator/Calculator.csproj --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 
 # or: the whole directory
-x2mcp ./Calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./Calculator --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 
 # or: a single file
-x2mcp ./Calculator/Calculator.cs --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./Calculator/Calculator.cs --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
-- `--out` — where the built, runnable MCP server ends up
-- `--name` — the server name (also used for the generated project's temp folder)
+- `--out-dir` — where the built, runnable MCP server ends up
+- `--name` — the server name, generated project name, and executable name
 - `--transport` — `stdio` (default) or `http`
 
 ## 3. What gets generated
@@ -78,21 +78,23 @@ x2mcp ./Calculator/Calculator.cs --out ./dist/calculator-mcp --name calculator -
 
 ```
 calculator/
-├── McpServer.csproj
+├── calculator.csproj
 ├── Program.cs
 └── CalculatorTools.cs
 ```
 
-**McpServer.csproj** — references your original `Calculator.csproj` and the
+**calculator.csproj** — references your original `Calculator.csproj` and the
 `ModelContextProtocol` SDK:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <AssemblyName>calculator.mcp</AssemblyName>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ServerExecutableExtension Condition="'$(OS)' == 'Windows_NT'">.exe</ServerExecutableExtension>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="1.4.1" />
@@ -101,6 +103,10 @@ calculator/
   <ItemGroup>
     <ProjectReference Include="../Calculator/Calculator.csproj" />
   </ItemGroup>
+  <Target Name="CreateServerLauncher" AfterTargets="Publish">
+    <Copy SourceFiles="$(PublishDir)$(AssemblyName)$(ServerExecutableExtension)" DestinationFiles="$(PublishDir)calculator$(ServerExecutableExtension)" />
+    <Delete Files="$(PublishDir)$(AssemblyName)$(ServerExecutableExtension)" />
+  </Target>
 </Project>
 ```
 

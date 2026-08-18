@@ -2,7 +2,7 @@
 
 ## How scanning works
 
-`x2mcp` always produces a single MCP server from whatever source you give it.
+`x2mcp` produces a single MCP server from whatever source you give it.
 
 - **Directory** (recommended) — recursively scans all `.rb` files in the directory
   and every subfolder. All discovered class methods are registered as tools in a
@@ -14,7 +14,7 @@ subdirectories are always skipped.
 
 ## Prerequisites
 
-- Ruby and [Bundler](https://bundler.io/) on your `PATH`.
+- Ruby on your `PATH`.
 - Ruby support currently targets `stdio` transport.
 
 ## 1. The source file
@@ -38,10 +38,10 @@ Point at the directory (whole library) or a single file:
 
 ```bash
 # recommended: whole library directory
-x2mcp ./calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 
 # or: a single file
-x2mcp ./calculator.rb --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator.rb --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
 ## 3. What gets generated
@@ -99,12 +99,13 @@ only supports **stdio** transport.
 
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Linux: `~/.config/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "calculator": {
-      "command": "/absolute/path/to/dist/calculator-mcp/calculator",
+      "command": "C:/absolute/path/to/dist/calculator-mcp/calculator.cmd",
       "args": []
     }
   }
@@ -121,7 +122,7 @@ Restart Claude after saving.
 ```toml
 [[mcp_servers]]
 name = "calculator"
-cmd = ["/absolute/path/to/dist/calculator-mcp/calculator"]
+cmd = ["C:/absolute/path/to/dist/calculator-mcp/calculator.cmd"]
 ```
 
 ### VS Code
@@ -133,7 +134,7 @@ cmd = ["/absolute/path/to/dist/calculator-mcp/calculator"]
   "servers": {
     "calculator": {
       "type": "stdio",
-      "command": "${workspaceFolder}/dist/calculator-mcp/calculator"
+      "command": "${workspaceFolder}/dist/calculator-mcp/calculator.cmd"
     }
   }
 }

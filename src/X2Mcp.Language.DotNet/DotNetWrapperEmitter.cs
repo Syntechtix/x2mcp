@@ -24,7 +24,7 @@ public class DotNetWrapperEmitter : IWrapperEmitter
 
         var files = new List<EmittedFile>
         {
-            new("McpServer.csproj", GenerateCsproj(relativeRef, context.Transport)),
+            new($"{context.ServerName}.csproj", GenerateCsproj(relativeRef, context)),
             new("Program.cs", GenerateProgram(surface, context)),
         };
 
@@ -56,19 +56,22 @@ public class DotNetWrapperEmitter : IWrapperEmitter
         return Path.Combine(dir, dirName + ".csproj");
     }
 
-    private string GenerateCsproj(string sourceProjectRef, Transport transport)
+    private string GenerateCsproj(string sourceProjectRef, BuildContext context)
     {
-        var sdk = transport == Transport.StreamableHttp
+        var sdk = context.Transport == Transport.StreamableHttp
             ? "Microsoft.NET.Sdk.Web"
             : "Microsoft.NET.Sdk";
+        var assemblyName = $"{context.ServerName}.mcp";
 
         return $"""
             <Project Sdk="{sdk}">
               <PropertyGroup>
                 <OutputType>Exe</OutputType>
+                <AssemblyName>{assemblyName}</AssemblyName>
                 <TargetFramework>net10.0</TargetFramework>
                 <Nullable>enable</Nullable>
                 <ImplicitUsings>enable</ImplicitUsings>
+                <ServerExecutableExtension Condition="'$(OS)' == 'Windows_NT'">.exe</ServerExecutableExtension>
               </PropertyGroup>
               <ItemGroup>
                 <PackageReference Include="ModelContextProtocol" Version="{McpSdkVersion}" />
@@ -77,6 +80,10 @@ public class DotNetWrapperEmitter : IWrapperEmitter
               <ItemGroup>
                 <ProjectReference Include="{sourceProjectRef}" />
               </ItemGroup>
+                            <Target Name="CreateServerLauncher" AfterTargets="Publish">
+                                <Copy SourceFiles="$(PublishDir)$(AssemblyName)$(ServerExecutableExtension)" DestinationFiles="$(PublishDir){context.ServerName}$(ServerExecutableExtension)" />
+                                <Delete Files="$(PublishDir)$(AssemblyName)$(ServerExecutableExtension)" />
+                            </Target>
             </Project>
             """;
     }

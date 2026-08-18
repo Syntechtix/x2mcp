@@ -22,8 +22,8 @@ public class RubyModuleTests
         Assert.Contains("ruby", _module.Toolchain.RequiredExecutables);
 
     [Fact]
-    public void Toolchain_RequiredExecutables_ContainsBundle() =>
-        Assert.Contains("bundle", _module.Toolchain.RequiredExecutables);
+    public void Toolchain_RequiredExecutables_ContainsOnlyRuby() =>
+        Assert.Equal(["ruby"], _module.Toolchain.RequiredExecutables);
 
     [Fact]
     public void Toolchain_SupportedTransports_ContainsStdio() =>

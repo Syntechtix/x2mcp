@@ -19,7 +19,7 @@ var transportOption = new Option<string>("--transport")
     DefaultValueFactory = _ => "stdio",
 };
 
-var outOption = new Option<string?>("--out")
+var outDirOption = new Option<string?>("--out-dir")
 {
     Description = "Output directory for the built MCP server (defaults to ./dist/<name>-mcp)",
     DefaultValueFactory = _ => null,
@@ -34,14 +34,14 @@ var nameOption = new Option<string?>("--name")
 var rootCommand = new RootCommand("x2mcp — wrap any source code as a self-contained MCP server");
 rootCommand.Arguments.Add(sourceArg);
 rootCommand.Options.Add(transportOption);
-rootCommand.Options.Add(outOption);
+rootCommand.Options.Add(outDirOption);
 rootCommand.Options.Add(nameOption);
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
 {
     var source = parseResult.GetValue(sourceArg)!;
     var transportStr = parseResult.GetValue(transportOption)!;
-    var output = parseResult.GetValue(outOption);
+    var output = parseResult.GetValue(outDirOption);
     var name = parseResult.GetValue(nameOption);
 
     var transport = transportStr.ToLowerInvariant() switch

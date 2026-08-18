@@ -51,13 +51,13 @@ dotnet tool update --global x2mcp
 ## CLI syntax
 
 ```
-x2mcp <source> [--out <path>] [--transport <stdio|http>] [--name <name>]
+x2mcp <source> [--out-dir <path>] [--transport <stdio|http>] [--name <name>]
 ```
 
 | Argument / Option | Required | Default | Description |
 |---|---|---|---|
 | `<source>` | yes | — | Path to the source file or directory to wrap |
-| `--out <path>` | no | `./dist/<name>-mcp` | Output directory for the built MCP server |
+| `--out-dir <path>` | no | `./dist/<name>-mcp` | Output directory for the built MCP server |
 | `--transport <stdio\|http>` | no | `stdio` | Transport the generated server uses |
 | `--name <name>` | no | source file/directory name | Server name |
 
@@ -65,7 +65,7 @@ x2mcp <source> [--out <path>] [--transport <stdio|http>] [--name <name>]
 ### Example
 
 ```bash
-x2mcp ./Calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./Calculator --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
 ```

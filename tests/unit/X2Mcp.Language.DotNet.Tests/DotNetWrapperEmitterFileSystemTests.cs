@@ -28,7 +28,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var context = MakeContext("/proj/src/Class.cs");
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/proj/src/Class.cs"), context);
 
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("MyLib.csproj", csproj);
     }
 
@@ -45,7 +45,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/proj/src"), context);
 
         fs.Received(1).GetFiles("/proj/src", "*.csproj", SearchOption.TopDirectoryOnly);
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("Lib.csproj", csproj);
     }
 
@@ -60,7 +60,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var context = MakeContext("/proj/MyLib");
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/proj/MyLib"), context);
 
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("MyLib.csproj", csproj);
     }
 
@@ -75,7 +75,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var context = MakeContext("/src", Transport.StreamableHttp);
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/src"), context);
 
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("Microsoft.NET.Sdk.Web", csproj);
     }
 
@@ -91,7 +91,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var context = MakeContext("/proj/src");
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/proj/src"), context);
 
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("MyLib.csproj", csproj);
     }
 
@@ -108,7 +108,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var context = MakeContext("/proj/src/Class.cs");
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/proj/src/Class.cs"), context);
 
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("MyLib.csproj", csproj);
     }
 
@@ -123,7 +123,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var context = MakeContext("/proj/MyLib");
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/proj/MyLib"), context);
 
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("MyLib.csproj", csproj);
     }
 
@@ -137,7 +137,7 @@ public class DotNetWrapperEmitterFileSystemTests
         var context = MakeContext("/proj/MyLib.csproj");
         var project = new DotNetWrapperEmitter(fs).Emit(EmptySurface("/proj/MyLib.csproj"), context);
 
-        var csproj = project.Files.Single(f => f.RelativePath == "McpServer.csproj").Content;
+        var csproj = project.Files.Single(f => f.RelativePath == "TestServer.csproj").Content;
         Assert.Contains("MyLib.csproj", csproj);
     }
 }

@@ -122,4 +122,24 @@ public class OrchestrationEngineFileSystemTests
         Assert.False(result.Success);
         Assert.Equal("build failed", result.Error);
     }
+
+    [Fact]
+    public async Task RunAsync_ProcessFailsWithoutStderr_ReturnsErrorFromStdout()
+    {
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src/file.stub").Returns(true);
+        fs.WriteAllTextAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var runner = new FakeProcessRunner
+        {
+            DefaultResult = new ProcessResult(1, "build failed", string.Empty),
+        };
+        var engine = MakeEngine(fs, runner, new StubLanguageModule(".stub"));
+
+        var result = await engine.RunAsync("/src/file.stub", "/out", "Srv", Transport.Stdio);
+
+        Assert.False(result.Success);
+        Assert.Equal("build failed", result.Error);
+    }
 }

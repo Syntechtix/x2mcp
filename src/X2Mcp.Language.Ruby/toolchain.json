@@ -1,5 +1,5 @@
 {
-  "requiredExecutables": ["ruby", "bundle"],
+  "requiredExecutables": ["ruby"],
   "buildCommand": "{GeneratedProjectPath}/build.rb {OutputPath} {ServerName}",
   "publishCommand": "{GeneratedProjectPath}/build.rb {OutputPath} {ServerName}",
   "supportedTransports": ["Stdio"],

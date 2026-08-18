@@ -6,7 +6,7 @@ imports your original package and exposes those functions as MCP tools.
 
 ## How scanning works
 
-`x2mcp` always produces a single MCP server from whatever source you give it.
+`x2mcp` produces a single MCP server from whatever source you give it.
 
 - **Directory** (recommended) — recursively scans all `.go` files in the directory
   and every subfolder. This is the normal way to wrap a whole package or module.
@@ -68,13 +68,13 @@ Point at the directory (whole package) or a single file:
 
 ```bash
 # recommended: whole package directory
-x2mcp ./calculator --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 
 # or: a single file
-x2mcp ./calculator/add.go --out ./dist/calculator-mcp --name calculator --transport stdio
+x2mcp ./calculator/add.go --out-dir ./dist/calculator-mcp --name calculator --transport stdio
 ```
 
-- `--out` — where the built, runnable MCP server binary ends up
+- `--out-dir` — where the built, runnable MCP server binary ends up
 - `--name` — the server name (also used for the generated project's temp folder)
 - `--transport` — `stdio` (default) or `http`
 
