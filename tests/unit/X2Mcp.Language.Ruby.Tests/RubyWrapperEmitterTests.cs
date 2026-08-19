@@ -125,6 +125,29 @@ public class RubyWrapperEmitterTests
     }
 
     [Fact]
+    public void Emit_Server_ParameterSchema_DoesNotClaimStringType()
+    {
+        // Regression test: Ruby has no static type info, so previously every parameter was
+        // declared `type: 'string'` in the advertised JSON Schema. A schema-honoring MCP client
+        // would then send string arguments, and Ruby's `+` would silently concatenate instead of
+        // add for numeric-looking tools. Omitting the type constraint is the honest schema.
+        var fs = Substitute.For<IFileSystem>();
+        fs.FileExists("/src/lib.rb").Returns(true);
+        fs.ReadAllText("/src/lib.rb").Returns("\n");
+
+        var surface = MakeSurface(new TypeDescriptor("lib", "lib", [
+            new FunctionDescriptor("add", [new ParameterDescriptor("a", string.Empty, false)], string.Empty, false),
+        ]));
+
+        var server = new RubyWrapperEmitter(fs)
+            .Emit(surface, MakeContext("/src/lib.rb"))
+            .Files.Single(f => f.RelativePath == "server.rb").Content;
+
+        Assert.DoesNotContain("type: 'string'", server);
+        Assert.Contains("properties[param[:name]] = {}", server);
+    }
+
+    [Fact]
     public void Emit_BuildScript_ContainsLauncherGeneration()
     {
         var fs = Substitute.For<IFileSystem>();

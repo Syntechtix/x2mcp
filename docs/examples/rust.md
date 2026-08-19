@@ -112,7 +112,7 @@ referenced by local path so no publishing is required:
 
 ```toml
 [package]
-name = "calculator"
+name = "calculator-mcp-server"
 version = "0.1.0"
 edition = "2021"
 
@@ -128,6 +128,8 @@ serde = { version = "1", features = ["derive"] }
 anyhow = "1"
 calculator = { path = "../../../calculator" }
 ```
+
+The generated crate's `[package]` name is always suffixed (`{name}-mcp-server`), even when it wouldn't otherwise collide with anything — this keeps the wrapper crate from ever sharing a name+version with the source crate in Cargo's build graph, which `cargo install` refuses outright ("package collision in the lockfile"). The `[[bin]]` name — and therefore the actual binary filename you get in `--out-dir` — is unaffected and always matches `--name` exactly.
 
 **src/main.rs** — one generated `{Function}Params` struct per function plus a
 `#[tool]`-annotated method that calls straight into your original crate:

@@ -94,9 +94,17 @@ public class RustWrapperEmitter : IWrapperEmitter
             ? "\naxum = \"0.8\"\ntower = \"0.5\""
             : string.Empty;
 
+        // The [package] name is deliberately distinct from the [[bin]] name (and always
+        // suffixed, not just when it happens to collide) — if it matched the source crate's
+        // own package name, `cargo install` would fail with "package collision in the
+        // lockfile", since Cargo can't have two different packages with the identical
+        // name+version in one build graph. The built binary itself is still named exactly
+        // {{binName}} via [[bin]], which is the name users and docs actually care about.
+        var packageName = $"{binName}-mcp-server";
+
         return $$"""
             [package]
-            name = "{{binName}}"
+            name = "{{packageName}}"
             version = "0.1.0"
             edition = "2021"
 

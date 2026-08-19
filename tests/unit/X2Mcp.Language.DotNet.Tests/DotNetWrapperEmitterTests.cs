@@ -80,6 +80,21 @@ public class DotNetWrapperEmitterTests : IDisposable
     }
 
     [Fact]
+    public void Emit_StdioTransport_ClearsDefaultLoggingProviders()
+    {
+        // Regression test: the default console logger writes to stdout, the same stream the MCP
+        // stdio transport uses for JSON-RPC — without this, every response is corrupted by
+        // interleaved log text and no real MCP client can talk to the generated server.
+        var surface = MakeSurface(new TypeDescriptor("", "Svc", []));
+        var context = MakeContext(Path.Combine(_tempDir, "FakeSource"), Transport.Stdio);
+
+        var programCs = new DotNetWrapperEmitter().Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "Program.cs").Content;
+
+        Assert.Contains("builder.Logging.ClearProviders();", programCs);
+    }
+
+    [Fact]
     public void Emit_HttpTransport_GeneratesAspNetCoreSetup()
     {
         var surface = MakeSurface(new TypeDescriptor("", "Svc", []));

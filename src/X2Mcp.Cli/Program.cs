@@ -60,9 +60,12 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
     if (string.IsNullOrWhiteSpace(serverName))
         serverName = "McpServer";
 
-    var outputPath = string.IsNullOrWhiteSpace(output)
+    // Resolved to an absolute path because the toolchain build/publish commands run with their
+    // working directory set to the generated wrapper project (not the user's cwd) — a relative
+    // path here would silently resolve against that temp folder instead of where the user expects.
+    var outputPath = Path.GetFullPath(string.IsNullOrWhiteSpace(output)
         ? Path.Combine("dist", $"{serverName}-mcp")
-        : output;
+        : output);
 
     var modules = new[]
     {

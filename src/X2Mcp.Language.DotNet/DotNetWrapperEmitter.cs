@@ -115,8 +115,13 @@ public class DotNetWrapperEmitter : IWrapperEmitter
             return $$"""
                 using Microsoft.Extensions.DependencyInjection;
                 using Microsoft.Extensions.Hosting;
+                using Microsoft.Extensions.Logging;
                 {{usingBlock}}
                 var builder = Host.CreateApplicationBuilder(args);
+                // The default console logger writes to stdout, which is also the MCP stdio
+                // transport's message stream — leaving it enabled corrupts every response with
+                // interleaved log text. Clear it so stdout carries only JSON-RPC frames.
+                builder.Logging.ClearProviders();
                 var services = builder.Services;
                 {{singletonBlock}}
                 services

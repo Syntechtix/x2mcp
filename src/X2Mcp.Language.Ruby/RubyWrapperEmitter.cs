@@ -107,7 +107,13 @@ public class RubyWrapperEmitter : IWrapperEmitter
         builder.AppendLine("    properties = {}");
         builder.AppendLine("    required = []");
         builder.AppendLine("    config[:params].each do |param|");
-        builder.AppendLine("      properties[param[:name]] = { type: 'string' }");
+        // Ruby has no static type info to draw on, so declaring every parameter as
+        // `type: 'string'` was a lie: a schema-honoring client would send string arguments,
+        // and Ruby's dynamic operators (e.g. `+`) would then silently do the wrong thing for
+        // numeric-looking tools (string concatenation instead of addition). Omitting the
+        // `type` key is the honest schema — it imposes no (incorrect) constraint and lets
+        // whatever JSON type the caller sends pass straight through to the wrapped method.
+        builder.AppendLine("      properties[param[:name]] = {}");
         builder.AppendLine("      required << param[:name] unless param[:optional]");
         builder.AppendLine("    end");
         builder.AppendLine("    { name: name, inputSchema: { type: 'object', properties: properties, required: required } }");

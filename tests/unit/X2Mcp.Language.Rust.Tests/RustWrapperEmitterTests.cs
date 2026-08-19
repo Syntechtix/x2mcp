@@ -55,6 +55,28 @@ public class RustWrapperEmitterTests
     }
 
     [Fact]
+    public void Emit_ServerNameMatchesSourceCrateName_PackageNameDoesNotCollide()
+    {
+        // Regression test: when --name matches the source crate's own package name (exactly what
+        // docs/examples/rust.md's own worked example does — a crate named "calculator" wrapped
+        // with --name calculator), the wrapper's [package] name used to equal the source crate's
+        // name too, and `cargo install` failed with "package collision in the lockfile" since two
+        // different packages can't share a name+version in one build graph. The [package] name
+        // must now always be distinct from the source crate name, while [[bin]] stays exactly the
+        // requested server name (that's the name the built binary actually gets on disk).
+        var fs = MakeSourceCrateFs("calculator");
+        var surface = MakeSurface(new TypeDescriptor("", "functions", []));
+        var context = MakeContext("/src", serverName: "calculator");
+
+        var cargoToml = new RustWrapperEmitter(fs).Emit(surface, context)
+            .Files.Single(f => f.RelativePath == "Cargo.toml").Content;
+
+        Assert.Contains("[[bin]]\nname = \"calculator\"", cargoToml);
+        Assert.DoesNotContain("[package]\nname = \"calculator\"", cargoToml);
+        Assert.Contains("calculator = { path =", cargoToml);
+    }
+
+    [Fact]
     public void Emit_BinNameStartingWithDigit_IsPrefixedWithUnderscore()
     {
         var fs = MakeSourceCrateFs();

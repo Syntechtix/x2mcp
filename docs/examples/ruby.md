@@ -68,6 +68,8 @@ TOOLS = {
 }
 ```
 
+**A note on parameter types:** Ruby has no static type annotations for `x2mcp` to read, so the JSON Schema advertised for each tool's parameters declares no type — the JSON value a caller sends is passed straight through to the wrapped method exactly as received (a JSON number arrives as a Ruby `Integer`/`Float`, a JSON string arrives as a Ruby `String`). For a method like `add` that relies on Ruby's `+`, that means the caller — not the schema — determines whether you get numeric addition or string concatenation. If precise typing matters for your tool, consider coercing/validating argument types inside the wrapped method itself.
+
 ## 4. Build
 
 `x2mcp` runs the Ruby toolchain's publish step through the generated `build.rb`:

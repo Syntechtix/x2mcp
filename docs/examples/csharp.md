@@ -147,6 +147,9 @@ using Microsoft.Extensions.Hosting;
 using Acme.Math;
 
 var builder = Host.CreateApplicationBuilder(args);
+// The default console logger writes to stdout, which is also the MCP stdio transport's
+// message stream — clearing it keeps stdout carrying only JSON-RPC frames.
+builder.Logging.ClearProviders();
 var services = builder.Services;
 services.AddSingleton<Calculator>();
 services
