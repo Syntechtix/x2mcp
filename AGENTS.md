@@ -34,7 +34,7 @@ dotnet test X2Mcp.slnx --filter "Category=Integration" -c Release
 
 ## Conventions
 
-- No code comments except one-liners stating what the code can't show on its own.
+- Names do the documenting, not comments. Choose variable, method, and property names precise enough that the code needs no comment to say what it is or does — `retryDelayMs = 4000`, not `x = 4000 // retry delay in ms`. No comments except one-liners stating what the code genuinely can't show on its own (a non-obvious *why*, an upstream constraint, a gotcha) — never a comment that just restates what a well-named line already says.
 - Don't invent behavior — verify assumptions against the actual implementation (existing scanners/emitters, SDK docs) before writing code; don't guess and implement a guess.
 - `TreatWarningsAsErrors=true` — nullable warnings and analyzer warnings fail the build; don't suppress, fix them.
 - Windows/WSL dual restore: restoring from WSL bash writes Linux-style NuGet paths into `obj/project.assets.json`, breaking Windows-side IntelliSense. Restore via `powershell.exe -NoProfile -Command "dotnet restore X2Mcp.slnx"` from WSL when this happens.

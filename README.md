@@ -1,5 +1,13 @@
 # x2mcp
 
+> ### ⚠️ Beta release
+> `x2mcp` is in **beta** (`0.1.0-beta`). It's had a manual QA pass across all five
+> supported languages— expect rough edges,
+> and expect breaking changes before a 1.0 release. Please
+> [open an issue](https://github.com/Syntechtix/x2mcp/issues) if something breaks.
+
+---
+
 Create a native-language MCP server wrapper around any language
 
 `x2mcp` scans an existing source file or project, discovers its public
@@ -38,14 +46,19 @@ builds it into a runnable server binary using that language's own toolchain.
 
 Prerequisite: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later.
 
+While `x2mcp` is in beta, no stable version exists yet — `dotnet tool install`/`update`
+only consider stable versions by default, so the plain form of these commands will
+fail with "package not found" until 1.0 ships. Pass `--prerelease` (or pin an exact
+`--version`) until then:
+
 ```bash
-dotnet tool install --global x2mcp
+dotnet tool install --global --prerelease x2mcp
 ```
 
 Upgrade to the latest version at any time with:
 
 ```bash
-dotnet tool update --global x2mcp
+dotnet tool update --global --prerelease x2mcp
 ```
 
 ## CLI syntax

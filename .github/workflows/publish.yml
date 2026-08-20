@@ -38,8 +38,9 @@ jobs:
           fi
 
           version="${latest_tag#v}"
-          major="${version%%.*}"
-          rest="${version#*.}"
+          core="${version%%-*}"
+          major="${core%%.*}"
+          rest="${core#*.}"
           minor="${rest%%.*}"
           patch="${rest#*.}"
 
