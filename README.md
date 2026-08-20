@@ -4,7 +4,6 @@
 [![Publish](https://github.com/Syntechtix/x2mcp/actions/workflows/publish.yml/badge.svg)](https://github.com/Syntechtix/x2mcp/actions/workflows/publish.yml)
 [![NuGet](https://img.shields.io/nuget/vpre/x2mcp)](https://www.nuget.org/packages/x2mcp)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/x2mcp)](https://www.nuget.org/packages/x2mcp)
-[![License](https://img.shields.io/github/license/Syntechtix/x2mcp)](LICENSE)
 
 ---
 
