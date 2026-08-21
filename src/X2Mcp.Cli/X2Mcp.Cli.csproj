@@ -11,6 +11,7 @@
     <Description>Wraps existing source code as a Model Context Protocol (MCP) server, generated and built in the source's own native language.</Description>
     <RepositoryUrl>https://github.com/Syntechtix/x2mcp</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Version>0.1.0-beta</Version>
     <PackageReleaseNotes>Early beta — manually QA'd across all five supported languages but expect rough edges and breaking changes.</PackageReleaseNotes>
   </PropertyGroup>
@@ -24,5 +25,8 @@
     <ProjectReference Include="../X2Mcp.Language.Go/X2Mcp.Language.Go.csproj" />
     <ProjectReference Include="../X2Mcp.Language.Rust/X2Mcp.Language.Rust.csproj" />
     <ProjectReference Include="../X2Mcp.Language.Ruby/X2Mcp.Language.Ruby.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>
