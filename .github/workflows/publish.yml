@@ -17,6 +17,7 @@ on:
 permissions:
   contents: write
   id-token: write
+  packages: write
 
 jobs:
   publish:
@@ -85,6 +86,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Push To GitHub Packages
+        run: >
+          dotnet nuget push "./nupkg/*.nupkg"
+          --api-key ${{ secrets.GITHUB_TOKEN }}
+          --source https://nuget.pkg.github.com/Syntechtix/index.json
+          --skip-duplicate
 
       - name: NuGet Login
         uses: NuGet/login@v1
