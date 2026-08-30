@@ -21,10 +21,41 @@ permissions:
   contents: write
   id-token: write
   packages: write
+  actions: read
 
 jobs:
+  verify-required-checks:
+    name: Verify Required Checks Passed
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Build Workflow Status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          conclusion=$(gh run list --repo "${{ github.repository }}" --workflow=build.yml --commit "${{ github.sha }}" --json conclusion --jq '.[0].conclusion')
+          echo "Build workflow conclusion for ${{ github.sha }}: ${conclusion:-none}"
+          if [ "$conclusion" != "success" ]; then
+            echo "Build workflow (formatting, build, unit tests, coverage, integration tests) has not succeeded for this commit."
+            exit 1
+          fi
+        shell: bash
+
+      - name: Check CodeQL Workflow Status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          conclusion=$(gh run list --repo "${{ github.repository }}" --workflow=codeql.yml --commit "${{ github.sha }}" --json conclusion --jq '.[0].conclusion')
+          echo "CodeQL workflow conclusion for ${{ github.sha }}: ${conclusion:-none}"
+          if [ "$conclusion" != "success" ]; then
+            echo "CodeQL workflow has not succeeded for this commit."
+            exit 1
+          fi
+        shell: bash
+
   publish:
     name: Publish
+    needs: verify-required-checks
     runs-on: ubuntu-latest
 
     steps:

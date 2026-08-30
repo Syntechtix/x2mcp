@@ -1,7 +1,7 @@
 # CodeQL security scan of the C# codebase, run only when code actually changes.
 # Test fixture files under **/Fixtures/** are sample code used as scanner input
 # data, not shipped product code, so they are excluded from analysis.
-name: CodeQL
+name: CodeQL C#
 
 on:
   push:
