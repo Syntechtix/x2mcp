@@ -1,3 +1,5 @@
+#  Runs formatting checks, build, unit tests with 100% coverage enforcement,
+#  and per-language integration test suites on every push and pull request to main.
 name: Build
 
 on:
@@ -19,7 +21,8 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -27,18 +30,25 @@ jobs:
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
+        shell: bash
+
       - name: Verify Formatting
         run: dotnet format X2Mcp.slnx --verify-no-changes
+        shell: bash
+
       - name: Build Solution
         run: dotnet build X2Mcp.slnx --no-restore -c Release
+        shell: bash
 
       - name: Run Unit Tests
         run: >
           dotnet test X2Mcp.slnx --no-build -c Release --filter "Category!=Integration"
           --collect:"XPlat Code Coverage" --results-directory ./coverage
+        shell: bash
 
       - name: Install Coverage Report Generator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
+        shell: bash
 
       - name: Generate Coverage Report
         run: >
@@ -46,9 +56,11 @@ jobs:
           -targetdir:coveragereport
           -reporttypes:"MarkdownSummaryGithub;Cobertura"
           -classfilters:"-System.Text.RegularExpressions.Generated*"
+        shell: bash
 
       - name: Publish Coverage Summary
         run: cat coveragereport/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
 
       - name: Enforce Full Line And Branch Coverage
         run: |
@@ -70,6 +82,7 @@ jobs:
           if [ "$failed" = "1" ]; then
             exit 1
           fi
+        shell: bash
 
   integration-dotnet:
     name: .NET Integration Test
@@ -78,7 +91,8 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -86,8 +100,11 @@ jobs:
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
+        shell: bash
+
       - name: Run .NET Integration Tests
         run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~DotNetEndToEndTests"
+        shell: bash
 
   integration-go:
     name: Go Integration Test
@@ -96,7 +113,8 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -110,8 +128,11 @@ jobs:
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
+        shell: bash
+
       - name: Run Go Integration Tests
         run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~GoEndToEndTests"
+        shell: bash
 
   integration-python:
     name: Python Integration Test
@@ -120,24 +141,29 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Install Python Dependencies
         run: python -m pip install --upgrade pip mcp pyinstaller
+        shell: bash
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
+        shell: bash
+
       - name: Run Python Integration Tests
         run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~PythonEndToEndTests"
+        shell: bash
 
   integration-ruby:
     name: Ruby Integration Test
@@ -146,7 +172,8 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -159,8 +186,11 @@ jobs:
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
+        shell: bash
+
       - name: Run Ruby Integration Tests
         run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~RubyEndToEndTests"
+        shell: bash
 
   integration-rust:
     name: Rust Integration Test
@@ -169,7 +199,8 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -180,8 +211,11 @@ jobs:
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
+        shell: bash
+
       - name: Run Rust Integration Tests
         run: dotnet test X2Mcp.slnx -c Release --filter "FullyQualifiedName~RustEndToEndTests"
+        shell: bash
 
   go-fixtures-lint:
     name: Go Fixtures Lint
@@ -192,7 +226,8 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
@@ -201,16 +236,19 @@ jobs:
 
       - name: Show Formatting Diff
         run: gofmt -l -d tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Go.Tests/Fixtures/GoSampleLib
+        shell: bash
+
       - name: Fail On Unformatted Files
         run: |
           test -z "$(gofmt -l tests/unit/X2Mcp.Language.Go.Tests tests/integration/X2Mcp.Integration.Go.Tests/Fixtures/GoSampleLib)"
+        shell: bash
 
   all-checks-passed:
     name: All Checks Passed
     needs: [build-and-unit-test, integration-dotnet, integration-go, integration-python, integration-ruby, integration-rust, go-fixtures-lint]
     if: always()
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Verify All Required Jobs Passed
         run: |
@@ -218,3 +256,4 @@ jobs:
             echo "One or more required jobs failed."
             exit 1
           fi
+        shell: bash

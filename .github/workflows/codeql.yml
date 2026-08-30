@@ -1,0 +1,47 @@
+# CodeQL security scan of the C# codebase, run only when code actually changes.
+# Test fixture files under **/Fixtures/** are sample code used as scanner input
+# data, not shipped product code, so they are excluded from analysis.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze:
+    name: Analyze C#
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          config: |
+            paths-ignore:
+              - "**/Fixtures/**"
+
+      - name: Restore Dependencies
+        run: dotnet restore X2Mcp.slnx
+        shell: bash
+
+      - name: Build Solution
+        run: dotnet build X2Mcp.slnx --no-restore -c Release
+        shell: bash
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"

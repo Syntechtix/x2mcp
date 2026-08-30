@@ -1,3 +1,6 @@
+#  Manually-triggered release workflow: computes the next SemVer tag, packs and
+#  publishes X2Mcp.Cli to GitHub Packages and NuGet.org, then tags the commit
+#  and creates a GitHub Release with the packaged assets attached.
 name: Publish
 
 on:
@@ -26,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -61,6 +64,7 @@ jobs:
 
           echo "version=${new_version}" >> "$GITHUB_OUTPUT"
           echo "tag=v${new_version}" >> "$GITHUB_OUTPUT"
+        shell: bash
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -69,16 +73,22 @@ jobs:
 
       - name: Restore Dependencies
         run: dotnet restore X2Mcp.slnx
+        shell: bash
+
       - name: Build Solution
         run: dotnet build X2Mcp.slnx --no-restore -c Release
+        shell: bash
+
       - name: Run Unit Tests
         run: dotnet test X2Mcp.slnx --no-build -c Release --filter "Category!=Integration"
+        shell: bash
 
       - name: Pack
         run: >
           dotnet pack src/X2Mcp.Cli/X2Mcp.Cli.csproj --no-restore -c Release
           -p:Version=${{ steps.version.outputs.version }}
           -o ./nupkg
+        shell: bash
 
       - name: Tag Release
         run: |
@@ -86,6 +96,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
+        shell: bash
 
       - name: Push To GitHub Packages
         run: >
@@ -93,6 +104,7 @@ jobs:
           --api-key ${{ secrets.GITHUB_TOKEN }}
           --source https://nuget.pkg.github.com/Syntechtix/index.json
           --skip-duplicate
+        shell: bash
 
       - name: NuGet Login
         uses: NuGet/login@v1
@@ -106,3 +118,16 @@ jobs:
           --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
+        shell: bash
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${{ steps.version.outputs.tag }}" --generate-notes
+        shell: bash
+
+      - name: Upload Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.version.outputs.tag }}" ./nupkg/*.nupkg
+        shell: bash
