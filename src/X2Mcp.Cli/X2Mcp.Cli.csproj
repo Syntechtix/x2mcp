@@ -16,7 +16,7 @@
     <PackageReleaseNotes>Early beta — manually QA'd across all five supported languages but expect rough edges and breaking changes.</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.11" />
+    <PackageReference Include="System.CommandLine" Version="2.0.12" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../X2Mcp.Core/X2Mcp.Core.csproj" />
